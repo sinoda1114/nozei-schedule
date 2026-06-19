@@ -42,6 +42,9 @@ function registerGlobalListeners(): void {
 // ---- アプリ状態（単一の真実） ----
 let doc: ScheduleDoc = { version: DOC_VERSION, updatedAt: new Date(0).toISOString(), items: [] };
 
+// WebAuthn 儀式の二重起動防止（ブラウザは同時に1リクエストのみ＝"Request is already pending"対策）
+let passkeyBusy = false;
+
 // 最後にサーバーが確定した updatedAt。楽観ロックの「期待値」として保存時に送る。
 // ローカル編集で doc.updatedAt は先走って書き換わるため、これは別管理する。
 let baseUpdatedAt = new Date(0).toISOString();
@@ -99,11 +102,15 @@ function renderGate(message = ''): void {
   const passkeyBtn = app.querySelector('.js-passkey-login');
   if (passkeyBtn) {
     passkeyBtn.addEventListener('click', async () => {
+      if (passkeyBusy) return; // 二重起動防止
+      passkeyBusy = true;
       try {
         setToken(await loginWithPasskey());
         void boot();
       } catch (err) {
         showErr(err instanceof Error ? err.message : 'パスキーでのログインに失敗しました');
+      } finally {
+        passkeyBusy = false;
       }
     });
   }
@@ -332,6 +339,8 @@ async function onRegisterPasskey(): Promise<void> {
     renderGate('再ログインしてください。');
     return;
   }
+  if (passkeyBusy) return; // 二重起動防止
+  passkeyBusy = true;
   // 重要: ここで window.prompt 等のダイアログを挟むと、ユーザー操作(user activation)が
   // 切れて Android Chrome で navigator.credentials.create() の生体プロンプトが起動しない。
   // タップ直後に最小の await(options取得)だけで儀式へ進める。端末名は自動付与。
@@ -344,6 +353,8 @@ async function onRegisterPasskey(): Promise<void> {
     setSaveStatus('');
     // モバイルでは小さな保存ステータスは見落とすため、失敗はアラートで明示する。
     window.alert(`パスキー登録に失敗しました\n${err instanceof Error ? err.message : ''}`);
+  } finally {
+    passkeyBusy = false;
   }
 }
 
