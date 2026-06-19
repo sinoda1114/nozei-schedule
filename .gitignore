@@ -25,3 +25,8 @@ npm-debug.log*
 
 # プレビュー生成物（dev用・非コミット）
 preview-dashboard.html
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/

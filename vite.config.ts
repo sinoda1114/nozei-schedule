@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 
 // 静的フロントエンドのビルド設定。
 // 出力は dist/ に吐き、Cloudflare Pages がこれを配信し、
@@ -11,5 +11,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+  },
+  test: {
+    // vitest（ユニット/DOM）は src と functions のみ。tests/e2e の Playwright spec は除外。
+    include: ['src/**/*.test.ts', 'functions/**/*.test.ts'],
   },
 });

@@ -7,6 +7,12 @@ import { DOC_VERSION, type ScheduleDoc, type ScheduleItem } from './types';
 import { openItemForm } from './ui/form';
 import { renderList, renderNext, renderSummary } from './ui/views';
 import { renderTimeline, timelineLegend, timelineRangeLabel } from './ui/timeline';
+import {
+  loginWithPasskey,
+  loginWithPassphrase,
+  passkeySupported,
+  registerThisDevice,
+} from './auth/passkeyClient';
 
 const TOKEN_KEY = 'nozei.token';
 const app = document.getElementById('app') as HTMLElement;
@@ -63,29 +69,56 @@ async function boot(): Promise<void> {
   }
 }
 
-// ---- パスフレーズ入力ゲート ----
+// ---- ログインゲート（パスキー / パスフレーズ） ----
 function renderGate(message = ''): void {
+  const passkeyBlock = passkeySupported()
+    ? `<button type="button" class="btn btn--primary gate__passkey js-passkey-login">パスキーでログイン</button>
+       <p class="gate__or">または</p>`
+    : '';
   app.innerHTML = `
     <main class="gate">
       <div class="gate__card">
         <h1 class="gate__title">納税スケジュール</h1>
-        <p class="gate__lead">アクセス用パスフレーズを入力してください。</p>
+        <p class="gate__lead">ログイン方法を選んでください。</p>
+        ${passkeyBlock}
         <form class="gate__form js-gate-form">
           <input type="password" class="field__input" name="pass" autocomplete="current-password"
             placeholder="パスフレーズ" required />
-          <button type="submit" class="btn btn--primary">接続</button>
+          <button type="submit" class="btn btn--ghost">パスフレーズでログイン</button>
         </form>
-        ${message ? `<p class="form__error">${escapeText(message)}</p>` : ''}
+        <p class="form__error js-gate-error" ${message ? '' : 'hidden'}>${escapeText(message)}</p>
       </div>
     </main>
   `;
+  const errEl = app.querySelector('.js-gate-error') as HTMLElement;
+  const showErr = (m: string): void => {
+    errEl.textContent = m;
+    errEl.hidden = false;
+  };
+
+  const passkeyBtn = app.querySelector('.js-passkey-login');
+  if (passkeyBtn) {
+    passkeyBtn.addEventListener('click', async () => {
+      try {
+        setToken(await loginWithPasskey());
+        void boot();
+      } catch (err) {
+        showErr(err instanceof Error ? err.message : 'パスキーでのログインに失敗しました');
+      }
+    });
+  }
+
   const form = app.querySelector('.js-gate-form') as HTMLFormElement;
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const pass = String(new FormData(form).get('pass') ?? '').trim();
     if (!pass) return;
-    setToken(pass);
-    void boot();
+    try {
+      setToken(await loginWithPassphrase(pass));
+      void boot();
+    } catch (err) {
+      showErr(err instanceof Error ? err.message : 'ログインに失敗しました');
+    }
   });
 }
 
@@ -121,6 +154,8 @@ function renderApp(): void {
             <button type="button" class="menu__item js-export">バックアップを保存（JSON）</button>
             <button type="button" class="menu__item js-import">バックアップから復元（JSON）</button>
             <button type="button" class="menu__item js-reload">サーバーから再読込</button>
+            ${passkeySupported() ? `<p class="menu__section">パスキー</p>
+            <button type="button" class="menu__item js-register-passkey">この端末をパスキー登録</button>` : ''}
             <p class="menu__section">アカウント</p>
             <button type="button" class="menu__item menu__item--danger js-logout">ログアウト</button>
           </div>
@@ -182,6 +217,13 @@ function wireAppEvents(): void {
     clearToken();
     renderGate('ログアウトしました。パスフレーズを入力してください。');
   });
+  const regBtn = app.querySelector('.js-register-passkey');
+  if (regBtn) {
+    regBtn.addEventListener('click', () => {
+      closeMenu();
+      void onRegisterPasskey();
+    });
+  }
 
   const seedBtn = app.querySelector('.js-load-seed');
   if (seedBtn) seedBtn.addEventListener('click', onLoadSeed);
@@ -271,6 +313,35 @@ async function onTogglePaid(id: string, paid: boolean): Promise<void> {
 async function onLoadSeed(): Promise<void> {
   const seed = createSeedDoc();
   await commit(seed.items);
+}
+
+// ---- パスキー登録（この端末） ----
+function defaultDeviceLabel(): string {
+  const ua = navigator.userAgent;
+  if (/iPhone/.test(ua)) return 'iPhone';
+  if (/iPad/.test(ua)) return 'iPad';
+  if (/Macintosh/.test(ua)) return 'Mac';
+  if (/Android/.test(ua)) return 'Android';
+  if (/Windows/.test(ua)) return 'Windows';
+  return '端末';
+}
+
+async function onRegisterPasskey(): Promise<void> {
+  const token = getToken();
+  if (!token) {
+    renderGate('再ログインしてください。');
+    return;
+  }
+  const label = window.prompt('この端末の名前（例: MacBook Touch ID）', defaultDeviceLabel());
+  if (label === null) return; // キャンセル
+  setSaveStatus('パスキー登録中…');
+  try {
+    await registerThisDevice(token, label.trim() || '端末');
+    setSaveStatus('パスキーを登録しました');
+    window.setTimeout(() => setSaveStatus(''), 2000);
+  } catch (err) {
+    setSaveStatus(`⚠ ${err instanceof Error ? err.message : '登録に失敗しました'}`);
+  }
 }
 
 // ---- エクスポート / インポート ----

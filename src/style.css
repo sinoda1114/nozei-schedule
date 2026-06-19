@@ -525,6 +525,32 @@ body {
   gap: 0.6rem;
 }
 
+.gate__passkey {
+  width: 100%;
+}
+
+.gate__or {
+  margin: 0.9rem 0 0.6rem;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  position: relative;
+}
+.gate__or::before,
+.gate__or::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 28%;
+  height: 1px;
+  background: var(--line);
+}
+.gate__or::before {
+  left: 0;
+}
+.gate__or::after {
+  right: 0;
+}
+
 /* ---------- footer ---------- */
 .footer {
   margin-top: 2rem;
