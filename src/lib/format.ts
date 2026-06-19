@@ -34,6 +34,18 @@ export function formatDate(iso: string, approx = false): string {
   return approx ? `${y}/${m}月ごろ` : `${y}/${m}/${d}`;
 }
 
+/**
+ * 年を省いた短い日付表記（タイムライン軸用）。
+ * - approx=true は「M月ごろ」
+ * - それ以外は「M/D」
+ */
+export function formatMonthDay(iso: string, approx = false): string {
+  const parts = parseYmd(iso);
+  if (!parts) return iso;
+  const { m, d } = parts;
+  return approx ? `${m}月ごろ` : `${m}/${d}`;
+}
+
 /** 残り日数を「あとN日 / N日経過 / 本日」などの語にする */
 export function formatRelativeDays(days: number): string {
   if (days === 0) return '本日';

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { formatDate, formatRelativeDays, formatYen, parseYmd } from './format';
+import { formatDate, formatMonthDay, formatRelativeDays, formatYen, parseYmd } from './format';
 
 describe('formatYen', () => {
   test('金額を3桁区切りの円表記にする', () => {
@@ -42,6 +42,19 @@ describe('formatDate', () => {
 
   test('approx=true は YYYY/M月ごろ', () => {
     expect(formatDate('2026-08-31', true)).toBe('2026/8月ごろ');
+  });
+});
+
+describe('formatMonthDay', () => {
+  test('年を省いた M/D を返す', () => {
+    expect(formatMonthDay('2026-06-28')).toBe('6/28');
+    expect(formatMonthDay('2027-01-29')).toBe('1/29');
+  });
+  test('approx=true は M月ごろ（年なし）', () => {
+    expect(formatMonthDay('2026-08-31', true)).toBe('8月ごろ');
+  });
+  test('年(20xx)を含まない', () => {
+    expect(formatMonthDay('2026-06-28')).not.toMatch(/20\d{2}/);
   });
 });
 

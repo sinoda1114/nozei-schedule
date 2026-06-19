@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { renderTimeline, timelineLegend } from './timeline';
+import { renderTimeline, timelineLegend, timelineRangeLabel } from './timeline';
 import { createSeedDoc } from '../lib/seed';
 import type { ScheduleItem } from '../types';
 
@@ -54,6 +54,35 @@ describe('renderTimeline', () => {
   test('全件支払済みなら「次の納付」マーカーは出ない', () => {
     const svg = renderTimeline([item({ paid: true })], '2026-06-19');
     expect(svg).not.toContain('次の納付');
+  });
+});
+
+describe('軸ラベルの年表記', () => {
+  test('日付ラベル(tl-date)に年(20xx)を含めない', () => {
+    const doc = createSeedDoc();
+    const svg = renderTimeline(doc.items, '2026-06-19');
+    const dateLabels = svg.match(/class="tl-date">([^<]*)</g) ?? [];
+    expect(dateLabels.length).toBe(doc.items.length);
+    for (const label of dateLabels) {
+      expect(label).not.toMatch(/20\d{2}/);
+    }
+    expect(svg).toContain('>6/28<');
+  });
+});
+
+describe('timelineRangeLabel', () => {
+  test('年を跨ぐ期間は両端の年を出す', () => {
+    expect(timelineRangeLabel(createSeedDoc().items)).toBe('2026年6月〜2027年1月');
+  });
+  test('同年なら末尾の年は省く', () => {
+    const items = [
+      item({ dueDate: '2026-06-28' }),
+      item({ dueDate: '2026-11-30' }),
+    ];
+    expect(timelineRangeLabel(items)).toBe('2026年6月〜11月');
+  });
+  test('空配列は空文字', () => {
+    expect(timelineRangeLabel([])).toBe('');
   });
 });
 

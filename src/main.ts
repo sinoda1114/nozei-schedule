@@ -6,7 +6,7 @@ import { AuthError, ApiError, ConflictError, RemoteRepository, normalizeDoc } fr
 import { DOC_VERSION, type ScheduleDoc, type ScheduleItem } from './types';
 import { openItemForm } from './ui/form';
 import { renderList, renderNext, renderSummary } from './ui/views';
-import { renderTimeline, timelineLegend } from './ui/timeline';
+import { renderTimeline, timelineLegend, timelineRangeLabel } from './ui/timeline';
 
 const TOKEN_KEY = 'nozei.token';
 const app = document.getElementById('app') as HTMLElement;
@@ -130,7 +130,7 @@ function renderApp(): void {
     <main class="content">
       ${renderNext(doc.items, t)}
       ${renderSummary(doc.items)}
-      ${doc.items.length > 0 ? `<section class="panel"><h2 class="panel__title">年間スケジュール</h2>${renderTimeline(doc.items, t)}<div class="timeline__legend">${timelineLegend()}</div></section>` : ''}
+      ${doc.items.length > 0 ? `<section class="panel"><h2 class="panel__title">年間スケジュール <span class="panel__range">${escapeText(timelineRangeLabel(doc.items))}</span></h2>${renderTimeline(doc.items, t)}<div class="timeline__legend">${timelineLegend()}</div></section>` : ''}
       ${renderList(doc.items, t)}
     </main>
     <footer class="footer">

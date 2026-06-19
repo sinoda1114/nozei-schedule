@@ -2,7 +2,7 @@
 // 純粋関数。状態は受け取るだけ。色はアプリの CSS 変数を参照しダーク/ライト両対応。
 
 import { isOverdue, nextUnpaid, sortByDue } from '../lib/calc';
-import { formatDate, formatYen } from '../lib/format';
+import { formatMonthDay, formatYen, parseYmd } from '../lib/format';
 import { type ScheduleItem, type TaxCategory } from '../types';
 import { escapeHtml } from './views';
 
@@ -59,8 +59,20 @@ function bar(
     <text x="${cx}" y="${labelY}" text-anchor="middle" class="tl-amount">${escapeHtml(amountLabel)}</text>
     ${rect}
     ${paidMark}
-    <text x="${cx}" y="${BASE_Y + 18}" text-anchor="middle" class="tl-date">${escapeHtml(formatDate(item.dueDate, item.dueApprox))}</text>
+    <text x="${cx}" y="${BASE_Y + 18}" text-anchor="middle" class="tl-date">${escapeHtml(formatMonthDay(item.dueDate, item.dueApprox))}</text>
   `;
+}
+
+/** 期間ラベル「YYYY年M月〜(YYYY年)M月」。年は跨ぐ時だけ末尾に出す。 */
+export function timelineRangeLabel(items: readonly ScheduleItem[]): string {
+  const sorted = sortByDue(items);
+  if (sorted.length === 0) return '';
+  const first = parseYmd(sorted[0].dueDate);
+  const last = parseYmd(sorted[sorted.length - 1].dueDate);
+  if (!first || !last) return '';
+  const start = `${first.y}年${first.m}月`;
+  const end = first.y === last.y ? `${last.m}月` : `${last.y}年${last.m}月`;
+  return `${start}〜${end}`;
 }
 
 /** タイムラインの凡例 */

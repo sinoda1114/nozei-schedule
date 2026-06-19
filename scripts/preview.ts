@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createSeedDoc } from '../src/lib/seed';
 import { renderList, renderNext, renderSummary } from '../src/ui/views';
-import { renderTimeline, timelineLegend } from '../src/ui/timeline';
+import { renderTimeline, timelineLegend, timelineRangeLabel } from '../src/ui/timeline';
 
 const doc = createSeedDoc();
 const today = '2026-06-19';
@@ -31,7 +31,7 @@ const inner = `
       ${renderNext(doc.items, today)}
       ${renderSummary(doc.items)}
       <section class="panel">
-        <h2 class="panel__title">年間スケジュール</h2>
+        <h2 class="panel__title">年間スケジュール <span class="panel__range">${timelineRangeLabel(doc.items)}</span></h2>
         ${renderTimeline(doc.items, today)}
         <div class="timeline__legend">${timelineLegend()}</div>
       </section>

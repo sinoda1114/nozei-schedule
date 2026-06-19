@@ -695,6 +695,13 @@ textarea.field__input {
   color: var(--ink-soft);
 }
 
+.panel__range {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-faint);
+  margin-left: 0.35rem;
+}
+
 .timeline__scroll {
   overflow-x: auto;
   overflow-y: hidden;
