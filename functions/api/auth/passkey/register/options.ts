@@ -32,7 +32,13 @@ export const onRequestPost = async ({ request, env }: Ctx): Promise<Response> =>
     userName: 'owner',
     userID: new TextEncoder().encode('owner'),
     attestationType: 'none',
-    authenticatorSelection: { residentKey: 'preferred', userVerification: 'required' },
+    // authenticatorAttachment:'platform' で「この端末の内蔵生体（指紋/Touch ID）」に固定。
+    // 未指定だと Android が NFC/USBセキュリティキー等の外付け選択肢を出してしまうため。
+    authenticatorSelection: {
+      authenticatorAttachment: 'platform',
+      residentKey: 'preferred',
+      userVerification: 'required',
+    },
   });
 
   const challengeToken = await issueChallengeToken(env, options.challenge, 'reg');
