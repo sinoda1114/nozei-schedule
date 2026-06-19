@@ -164,6 +164,11 @@ body {
   flex-direction: column;
 }
 
+/* hidden 属性で確実に隠す（display:flex が UA の [hidden] を上書きするのを修正） */
+.menu__panel[hidden] {
+  display: none;
+}
+
 .menu__item {
   font: inherit;
   text-align: left;

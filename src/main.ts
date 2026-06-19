@@ -122,7 +122,7 @@ function renderApp(): void {
             <button type="button" class="menu__item js-import">バックアップから復元（JSON）</button>
             <button type="button" class="menu__item js-reload">サーバーから再読込</button>
             <p class="menu__section">アカウント</p>
-            <button type="button" class="menu__item menu__item--danger js-logout">パスフレーズを変更</button>
+            <button type="button" class="menu__item menu__item--danger js-logout">ログアウト</button>
           </div>
         </div>
       </div>
@@ -180,7 +180,7 @@ function wireAppEvents(): void {
   (app.querySelector('.js-logout') as HTMLElement).addEventListener('click', () => {
     closeMenu();
     clearToken();
-    renderGate('新しいパスフレーズを入力してください。');
+    renderGate('ログアウトしました。パスフレーズを入力してください。');
   });
 
   const seedBtn = app.querySelector('.js-load-seed');
