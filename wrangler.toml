@@ -7,7 +7,7 @@ pages_build_output_dir = "dist"
 # （詳しい手順は README を参照）
 [[kv_namespaces]]
 binding = "SCHEDULE_KV"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "9cac4dc3a8f14cb3b65b7079e3c640c8"
 
 # 認証用パスフレーズは秘密情報なのでここには書かない。
 # 本番: `wrangler pages secret put APP_PASSPHRASE`
