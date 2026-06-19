@@ -332,15 +332,18 @@ async function onRegisterPasskey(): Promise<void> {
     renderGate('再ログインしてください。');
     return;
   }
-  const label = window.prompt('この端末の名前（例: MacBook Touch ID）', defaultDeviceLabel());
-  if (label === null) return; // キャンセル
+  // 重要: ここで window.prompt 等のダイアログを挟むと、ユーザー操作(user activation)が
+  // 切れて Android Chrome で navigator.credentials.create() の生体プロンプトが起動しない。
+  // タップ直後に最小の await(options取得)だけで儀式へ進める。端末名は自動付与。
   setSaveStatus('パスキー登録中…');
   try {
-    await registerThisDevice(token, label.trim() || '端末');
+    await registerThisDevice(token, defaultDeviceLabel());
     setSaveStatus('パスキーを登録しました');
-    window.setTimeout(() => setSaveStatus(''), 2000);
+    window.setTimeout(() => setSaveStatus(''), 2500);
   } catch (err) {
-    setSaveStatus(`⚠ ${err instanceof Error ? err.message : '登録に失敗しました'}`);
+    setSaveStatus('');
+    // モバイルでは小さな保存ステータスは見落とすため、失敗はアラートで明示する。
+    window.alert(`パスキー登録に失敗しました\n${err instanceof Error ? err.message : ''}`);
   }
 }
 
