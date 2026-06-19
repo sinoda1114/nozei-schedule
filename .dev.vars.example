@@ -1,0 +1,3 @@
+# ローカルで `wrangler pages dev` を動かすときの秘密情報サンプル。
+# このファイルを .dev.vars にコピーして値を設定する（.dev.vars は .gitignore 済み）。
+APP_PASSPHRASE=change-me-to-a-long-random-passphrase

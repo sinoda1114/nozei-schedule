@@ -1,0 +1,14 @@
+name = "nozei-schedule"
+compatibility_date = "2024-11-06"
+pages_build_output_dir = "dist"
+
+# KV 名前空間バインディング。
+# 実際の id は `wrangler kv namespace create SCHEDULE_KV` で作成して差し替える。
+# （詳しい手順は README を参照）
+[[kv_namespaces]]
+binding = "SCHEDULE_KV"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# 認証用パスフレーズは秘密情報なのでここには書かない。
+# 本番: `wrangler pages secret put APP_PASSPHRASE`
+# ローカル: .dev.vars に APP_PASSPHRASE=... を置く（.gitignore 済み）
