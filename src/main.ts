@@ -2,7 +2,7 @@
 
 import './style.css';
 import { createSeedDoc } from './lib/seed';
-import { AuthError, ApiError, RemoteRepository, normalizeDoc } from './lib/repository';
+import { AuthError, ApiError, ConflictError, RemoteRepository, normalizeDoc } from './lib/repository';
 import { DOC_VERSION, type ScheduleDoc, type ScheduleItem } from './types';
 import { openItemForm } from './ui/form';
 import { renderList, renderNext, renderSummary } from './ui/views';
@@ -35,6 +35,10 @@ function registerGlobalListeners(): void {
 // ---- アプリ状態（単一の真実） ----
 let doc: ScheduleDoc = { version: DOC_VERSION, updatedAt: new Date(0).toISOString(), items: [] };
 
+// 最後にサーバーが確定した updatedAt。楽観ロックの「期待値」として保存時に送る。
+// ローカル編集で doc.updatedAt は先走って書き換わるため、これは別管理する。
+let baseUpdatedAt = new Date(0).toISOString();
+
 const today = (): string => {
   const d = new Date();
   const z = (n: number) => String(n).padStart(2, '0');
@@ -48,6 +52,7 @@ async function boot(): Promise<void> {
   app.innerHTML = `<div class="loading">読み込み中…</div>`;
   try {
     doc = await repo.load();
+    baseUpdatedAt = doc.updatedAt; // サーバー確定値を楽観ロックの基準に取り込む
     renderApp();
   } catch (err) {
     if (err instanceof AuthError) renderGate();
@@ -185,12 +190,26 @@ async function commit(next: ScheduleItem[]): Promise<void> {
 async function persist(): Promise<void> {
   setSaveStatus('保存中…');
   try {
-    await repo.save(doc);
+    const confirmedUpdatedAt = await repo.save(doc, baseUpdatedAt);
+    // サーバー確定値で基準と表示を揃える（次回保存の期待値になる）。
+    baseUpdatedAt = confirmedUpdatedAt;
+    doc = { ...doc, updatedAt: confirmedUpdatedAt };
     setSaveStatus('保存しました');
     window.setTimeout(() => setSaveStatus(''), 1800);
   } catch (err) {
     if (err instanceof AuthError) {
       renderGate('認証が切れました。パスフレーズを再入力してください。');
+      return;
+    }
+    if (err instanceof ConflictError) {
+      // 他端末が先に更新済み。この変更は保存されていない。
+      // 自動マージはせず、最新を読み込み直して再編集を促す（最小フロー）。
+      setSaveStatus('⚠ 他の端末で更新されました');
+      window.alert(
+        '他の端末でデータが更新されていたため、この変更は保存できませんでした。\n' +
+          '最新の状態を読み込み直します。お手数ですが、もう一度編集してください。',
+      );
+      await boot();
       return;
     }
     const msg = err instanceof ApiError ? err.message : '保存に失敗しました';

@@ -1,9 +1,19 @@
 // Cloudflare Pages Function: /api/schedule
-// GET  -> KV からスケジュールJSONを返す
-// PUT  -> 受け取ったJSONを検証して KV に保存
+// GET  -> KV からスケジュールJSONを返す（updatedAt を含む）
+// PUT  -> 受け取ったJSONを検証し、楽観ロックを通過した場合のみ KV に保存
 //
 // 認証: Authorization: Bearer <パスフレーズ> を APP_PASSPHRASE と
 //       定数時間比較（SHA-256 ハッシュ同士の比較）で照合する。
+//
+// 並行制御: クライアントは「読み込んだ時点の updatedAt」を
+//   X-Expected-UpdatedAt ヘッダで送る。KV 上の現在値と一致しない場合は
+//   409 を返し、他端末の更新を握り潰さない（詳細は lib/concurrency.ts）。
+
+import {
+  EXPECTED_UPDATED_AT_HEADER,
+  evaluatePrecondition,
+  readStoredUpdatedAt,
+} from '../../src/lib/concurrency';
 
 interface Env {
   SCHEDULE_KV: KVNamespace;
@@ -113,6 +123,16 @@ export const onRequestPut = async ({ request, env }: PagesContext): Promise<Resp
     return json({ error: 'invalid json' }, 400);
   }
   if (!isValidDoc(parsed)) return json({ error: 'invalid schema' }, 422);
+
+  // 楽観的並行制御: KV 上の現在 updatedAt とクライアントの期待値を照合する。
+  // 不一致なら他端末が先に更新しているので上書きせず 409 を返す。
+  const expected = request.headers.get(EXPECTED_UPDATED_AT_HEADER);
+  const stored = await env.SCHEDULE_KV.get(KV_KEY);
+  const current = readStoredUpdatedAt(stored);
+  const precondition = evaluatePrecondition(expected, current);
+  if (!precondition.ok) {
+    return json({ error: precondition.error, currentUpdatedAt: current }, precondition.status);
+  }
 
   const doc = {
     version: typeof parsed.version === 'number' ? parsed.version : 1,
