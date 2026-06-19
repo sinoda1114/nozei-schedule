@@ -69,7 +69,7 @@ function renderGate(message = ''): void {
             placeholder="パスフレーズ" required />
           <button type="submit" class="btn btn--primary">接続</button>
         </form>
-        ${message ? `<p class="form__error">${message}</p>` : ''}
+        ${message ? `<p class="form__error">${escapeText(message)}</p>` : ''}
       </div>
     </main>
   `;

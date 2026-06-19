@@ -76,8 +76,17 @@ function statusChip(item: ScheduleItem): string {
     : '<span class="chip chip--estimated">予測</span>';
 }
 
+const CATEGORY_CLASSES: ReadonlySet<string> = new Set([
+  'residence',
+  'income',
+  'business',
+  'other',
+]);
+
 function rowClasses(item: ScheduleItem, today: string): string {
-  const classes = ['row', `row--${item.category}`];
+  // category は型・normalize で4値に限定されるが、CSSクラスへ展開するため念のためホワイトリスト確認
+  const safeCat = CATEGORY_CLASSES.has(item.category) ? item.category : 'other';
+  const classes = ['row', `row--${safeCat}`];
   if (item.paid) classes.push('row--paid');
   if (isOverdue(item, today)) classes.push('row--overdue');
   return classes.join(' ');

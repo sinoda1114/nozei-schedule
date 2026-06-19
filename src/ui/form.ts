@@ -7,11 +7,9 @@ const CATEGORY_OPTIONS: TaxCategory[] = ['residence', 'income', 'business', 'oth
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   attrs: Record<string, string> = {},
-  html = '',
 ): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
-  if (html) node.innerHTML = html;
   return node;
 }
 
@@ -165,7 +163,11 @@ function showError(el: HTMLElement, message: string): void {
 }
 
 function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;');
 }
 
 function escapeHtmlText(value: string): string {
