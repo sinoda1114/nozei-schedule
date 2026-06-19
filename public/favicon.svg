@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Tax calendar favicon">
+  <rect width="512" height="512" rx="92" fill="#ffffff"/>
+  <path fill="#111111" d="M62 131h388c24 0 43 19 43 43v267c0 24-19 43-43 43H62c-24 0-43-19-43-43V174c0-24 19-43 43-43Zm0 107v203h388V238H62Z"/>
+  <path fill="#111111" d="M19 174c0-24 19-43 43-43h388c24 0 43 19 43 43v42H19v-42Z"/>
+  <g fill="#111111">
+    <rect x="64" y="48" width="22" height="104" rx="11"/>
+    <rect x="149" y="48" width="22" height="104" rx="11"/>
+    <rect x="234" y="48" width="22" height="104" rx="11"/>
+    <rect x="319" y="48" width="22" height="104" rx="11"/>
+    <rect x="404" y="48" width="22" height="104" rx="11"/>
+  </g>
+  <g fill="#ffffff">
+    <circle cx="75" cy="152" r="24"/>
+    <circle cx="160" cy="152" r="24"/>
+    <circle cx="245" cy="152" r="24"/>
+    <circle cx="330" cy="152" r="24"/>
+    <circle cx="415" cy="152" r="24"/>
+  </g>
+  <g fill="#111111" font-family="Arial Black, Impact, Helvetica, sans-serif" font-size="130" font-weight="900">
+    <text x="256" y="379" text-anchor="middle">TAX</text>
+  </g>
+</svg>

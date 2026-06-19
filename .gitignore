@@ -22,3 +22,6 @@ npm-debug.log*
 .review-reports/
 
 # NOTE: package-lock.json は意図的にコミット対象（除外しない）
+
+# プレビュー生成物（dev用・非コミット）
+preview-dashboard.html
