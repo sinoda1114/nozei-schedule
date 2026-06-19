@@ -10,7 +10,6 @@ import {
   rpConfig,
   unauthorized,
 } from '../../../../_lib/auth';
-import { listCredentials } from '../../../../_lib/passkey';
 
 interface Ctx {
   request: Request;
@@ -22,18 +21,17 @@ export const onRequestPost = async ({ request, env }: Ctx): Promise<Response> =>
   if (!env.SESSION_SECRET) return json({ error: 'server misconfigured' }, 500);
 
   const { rpID, rpName } = rpConfig(request);
-  const existing = await listCredentials(env);
 
+  // excludeCredentials は意図的に渡さない。
+  // 他端末の credential ID を渡すと Android の Credential Manager が
+  // "An unknown error occurred while talking to the credential manager" を返すため。
+  // 重複登録の防止より、複数端末での登録成功を優先する（個人・単一ユーザー前提）。
   const options = await generateRegistrationOptions({
     rpName,
     rpID,
     userName: 'owner',
     userID: new TextEncoder().encode('owner'),
     attestationType: 'none',
-    excludeCredentials: existing.map((c) => ({
-      id: c.id,
-      transports: c.transports as never,
-    })),
     authenticatorSelection: { residentKey: 'preferred', userVerification: 'required' },
   });
 
