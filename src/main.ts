@@ -117,9 +117,11 @@ function renderApp(): void {
         <div class="menu">
           <button type="button" class="btn btn--ghost js-menu-btn" aria-haspopup="true" aria-expanded="false">⋯</button>
           <div class="menu__panel" hidden>
-            <button type="button" class="menu__item js-export">JSONで書き出し</button>
-            <button type="button" class="menu__item js-import">JSONを読み込み</button>
+            <p class="menu__section">データのバックアップ</p>
+            <button type="button" class="menu__item js-export">バックアップを保存（JSON）</button>
+            <button type="button" class="menu__item js-import">バックアップから復元（JSON）</button>
             <button type="button" class="menu__item js-reload">サーバーから再読込</button>
+            <p class="menu__section">アカウント</p>
             <button type="button" class="menu__item menu__item--danger js-logout">パスフレーズを変更</button>
           </div>
         </div>
@@ -150,6 +152,10 @@ function wireAppEvents(): void {
 
   const menuBtn = app.querySelector('.js-menu-btn') as HTMLElement;
   const menuPanel = app.querySelector('.menu__panel') as HTMLElement;
+  const closeMenu = (): void => {
+    menuPanel.hidden = true;
+    menuBtn.setAttribute('aria-expanded', 'false');
+  };
   menuBtn.addEventListener('click', () => {
     const open = menuPanel.hidden;
     menuPanel.hidden = !open;
@@ -157,13 +163,22 @@ function wireAppEvents(): void {
   });
   // 外側クリックで閉じる処理は boot 時に1回だけ登録する（再描画ごとの多重登録を防ぐ）
 
-  (app.querySelector('.js-export') as HTMLElement).addEventListener('click', onExport);
-  (app.querySelector('.js-import') as HTMLElement).addEventListener('click', () =>
-    (app.querySelector('.js-import-file') as HTMLInputElement).click(),
-  );
+  // メニュー項目を押したら必ず閉じてからアクションを実行する
+  (app.querySelector('.js-export') as HTMLElement).addEventListener('click', () => {
+    closeMenu();
+    onExport();
+  });
+  (app.querySelector('.js-import') as HTMLElement).addEventListener('click', () => {
+    closeMenu();
+    (app.querySelector('.js-import-file') as HTMLInputElement).click();
+  });
   (app.querySelector('.js-import-file') as HTMLInputElement).addEventListener('change', onImportFile);
-  (app.querySelector('.js-reload') as HTMLElement).addEventListener('click', () => void boot());
+  (app.querySelector('.js-reload') as HTMLElement).addEventListener('click', () => {
+    closeMenu();
+    void boot();
+  });
   (app.querySelector('.js-logout') as HTMLElement).addEventListener('click', () => {
+    closeMenu();
     clearToken();
     renderGate('新しいパスフレーズを入力してください。');
   });

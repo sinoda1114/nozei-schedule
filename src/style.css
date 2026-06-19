@@ -184,6 +184,17 @@ body {
   color: var(--overdue);
 }
 
+.menu__section {
+  margin: 0.35rem 0.7rem 0.1rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+}
+.menu__section:first-child {
+  margin-top: 0.15rem;
+}
+
 /* ---------- next ---------- */
 .next {
   background: linear-gradient(135deg, var(--accent) 0%, oklch(40% 0.14 280) 100%);
