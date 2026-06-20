@@ -1,0 +1,106 @@
+/* HeroUI v3 のスタイル（Tailwind v4 + テーマ + コンポーネントCSS）を取り込む。
+   @heroui/styles 自身が `@import "tailwindcss"` を内包しているため、ここでの追加importは不要。 */
+@import "@heroui/styles";
+
+/* HeroUI はテーマを .dark / [data-theme="dark"] クラスで切り替える（useTheme フック）。
+   下記のドメイントークンも同じクラス戦略に合わせ、HeroUI と一括で切り替わるようにする。 */
+@layer base {
+  :root {
+    /* semantic（税目以外の意味色） */
+    --confirmed: oklch(48% 0.13 265);
+    --estimated: oklch(62% 0.13 70);
+    --chip-est-fg: oklch(45% 0.12 60);
+    --paid: oklch(58% 0.13 155);
+    --overdue: oklch(55% 0.2 25);
+
+    /* category accents（タイムライン・行の色分け） */
+    --cat-residence: oklch(55% 0.13 265);
+    --cat-income: oklch(55% 0.13 200);
+    --cat-business: oklch(58% 0.13 300);
+    --cat-other: oklch(60% 0.02 265);
+
+    /* 「次の納付」ヒーローのグラデーション端点 */
+    --next-from: oklch(48% 0.13 265);
+    --next-to: oklch(40% 0.14 280);
+    --next-overdue-from: oklch(55% 0.2 25);
+    --next-overdue-to: oklch(45% 0.18 20);
+
+    /* タイムライン用の中立色（HeroUI トークンに無いもののみ） */
+    --ink: var(--foreground);
+    --ink-faint: var(--muted);
+    --line: var(--border);
+  }
+
+  .dark,
+  [data-theme="dark"] {
+    --confirmed: oklch(80% 0.1 265);
+    --estimated: oklch(74% 0.13 75);
+    --chip-est-fg: oklch(86% 0.11 78);
+    --paid: oklch(72% 0.13 155);
+    --overdue: oklch(70% 0.18 25);
+
+    --cat-residence: oklch(68% 0.13 265);
+    --cat-income: oklch(70% 0.12 200);
+    --cat-business: oklch(72% 0.12 300);
+    --cat-other: oklch(66% 0.02 265);
+
+    --next-from: oklch(40% 0.1 265);
+    --next-to: oklch(34% 0.12 280);
+    --next-overdue-from: oklch(48% 0.18 25);
+    --next-overdue-to: oklch(40% 0.16 20);
+  }
+
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family:
+      "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, -apple-system,
+      sans-serif;
+    line-height: 1.6;
+    font-feature-settings: "palt";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: clamp(1rem, 0.5rem + 2vw, 2rem);
+  }
+}
+
+/* ---------- タイムライン SVG（HeroUI に等価物が無いため独自スタイル） ---------- */
+.tl-axis {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.tl-amount {
+  fill: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.tl-date {
+  fill: var(--ink-faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.tl-paid {
+  fill: var(--paid);
+  font-size: 14px;
+  font-weight: 800;
+}
+.tl-next {
+  fill: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
