@@ -6,6 +6,7 @@ import { Button, Dropdown, Label } from '@heroui/react';
 import { type Key, type ReactNode } from 'react';
 
 export interface AppMenuActions {
+  onImportMedia: () => void;
   onExport: () => void;
   onImport: () => void;
   onReload: () => void;
@@ -22,6 +23,8 @@ export function AppMenu({
 }): ReactNode {
   const handleAction = (key: Key): void => {
     switch (key) {
+      case 'import-media':
+        return actions.onImportMedia();
       case 'export':
         return actions.onExport();
       case 'import':
@@ -42,6 +45,11 @@ export function AppMenu({
       </Button>
       <Dropdown.Popover>
         <Dropdown.Menu onAction={handleAction} aria-label="メニュー">
+          <Dropdown.Section>
+            <Dropdown.Item id="import-media" textValue="画像/動画から取り込み">
+              <Label>画像/動画から取り込み</Label>
+            </Dropdown.Item>
+          </Dropdown.Section>
           <Dropdown.Section>
             <Dropdown.Item id="export" textValue="バックアップを保存（JSON）">
               <Label>バックアップを保存（JSON）</Label>

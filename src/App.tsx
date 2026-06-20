@@ -3,6 +3,8 @@
 
 import { Button, Spinner, useTheme } from '@heroui/react';
 import { useRef, useState, type ReactNode } from 'react';
+import { analyzeFile } from './analyze/analyzeClient';
+import { proposedToItem, type ProposedItem } from './analyze/types';
 import {
   loginWithPasskey,
   loginWithPassphrase,
@@ -14,6 +16,7 @@ import { createSeedDoc } from './lib/seed';
 import { today } from './lib/today';
 import { getToken } from './lib/token';
 import { type ScheduleItem } from './types';
+import { AnalyzeReviewModal } from './ui/AnalyzeReviewModal';
 import { AppMenu } from './ui/AppMenu';
 import { Gate } from './ui/Gate';
 import { ItemFormModal } from './ui/ItemFormModal';
@@ -44,9 +47,15 @@ export function App(): ReactNode {
   const { doc } = sched;
 
   const [modal, setModal] = useState<{ open: boolean; editing?: ScheduleItem }>({ open: false });
+  const [analyze, setAnalyze] = useState<{ open: boolean; items: ProposedItem[] }>({
+    open: false,
+    items: [],
+  });
   const [notice, setNotice] = useState('');
   const passkeyBusy = useRef(false);
+  const mediaBusy = useRef(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const mediaInput = useRef<HTMLInputElement>(null);
 
   const t = today();
 
@@ -109,6 +118,37 @@ export function App(): ReactNode {
     } catch (err) {
       setNotice(`⚠ 読み込み失敗: ${err instanceof Error ? err.message : ''}`);
     }
+  };
+
+  // ---- 画像/動画から取り込み ----
+  const onMediaFile = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const token = getToken();
+    if (!token) {
+      setNotice('再ログインしてください。');
+      return;
+    }
+    if (mediaBusy.current) return;
+    mediaBusy.current = true;
+    setNotice('解析中…');
+    try {
+      const items = await analyzeFile(token, file);
+      setNotice('');
+      setAnalyze({ open: true, items });
+    } catch (err) {
+      setNotice('');
+      window.alert(`解析に失敗しました\n${err instanceof Error ? err.message : ''}`);
+    } finally {
+      mediaBusy.current = false;
+    }
+  };
+
+  const onAnalyzeConfirm = (selected: ProposedItem[]): void => {
+    setAnalyze({ open: false, items: [] });
+    if (selected.length === 0) return;
+    void sched.commit([...doc.items, ...selected.map(proposedToItem)]);
   };
 
   // ---- パスキー ----
@@ -197,6 +237,7 @@ export function App(): ReactNode {
           <AppMenu
             passkeySupported={passkeySupported()}
             actions={{
+              onImportMedia: () => mediaInput.current?.click(),
               onExport,
               onImport: () => fileInput.current?.click(),
               onReload: () => void sched.reload(),
@@ -243,12 +284,27 @@ export function App(): ReactNode {
         hidden
         onChange={(e) => void onImportFile(e)}
       />
+      <input
+        ref={mediaInput}
+        type="file"
+        accept="image/jpeg,image/png,video/mp4"
+        hidden
+        data-testid="media-input"
+        onChange={(e) => void onMediaFile(e)}
+      />
 
       <ItemFormModal
         isOpen={modal.open}
         existing={modal.editing}
         onSubmit={onModalSubmit}
         onClose={() => setModal({ open: false })}
+      />
+
+      <AnalyzeReviewModal
+        isOpen={analyze.open}
+        items={analyze.items}
+        onConfirm={onAnalyzeConfirm}
+        onClose={() => setAnalyze({ open: false, items: [] })}
       />
     </>
   );
