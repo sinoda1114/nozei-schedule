@@ -39,9 +39,7 @@ function Row({ item, today, on }: { item: ScheduleItem; today: string; on: RowHa
     <Card
       data-id={item.id}
       data-testid="schedule-row"
-      className={`flex flex-row items-center gap-3 border-l-4 p-3.5 ${
-        item.paid ? 'opacity-60' : ''
-      }`}
+      className={`sched-row border-l-4 p-3.5 ${item.paid ? 'opacity-60' : ''}`}
       style={{
         borderLeftColor: overdue ? 'var(--overdue)' : CATEGORY_VAR[item.category],
         ...(overdue
@@ -49,27 +47,29 @@ function Row({ item, today, on }: { item: ScheduleItem; today: string; on: RowHa
           : {}),
       }}
     >
-      <Checkbox
-        isSelected={item.paid}
-        onChange={(v) => on.onTogglePaid(item.id, v)}
-        aria-label="支払済みにする"
-        data-testid="toggle-paid"
-      />
+      <div className="sched-row__check">
+        <Checkbox
+          isSelected={item.paid}
+          onChange={(v) => on.onTogglePaid(item.id, v)}
+          aria-label="支払済みにする"
+          data-testid="toggle-paid"
+        />
+      </div>
 
-      <div className="min-w-0 flex-1">
+      <div className="sched-row__main min-w-0">
         <p
           className={`m-0 truncate font-bold ${item.paid ? 'line-through decoration-muted' : ''}`}
           data-testid="row-label"
         >
           {item.label}
         </p>
-        <p className="m-0 mt-0.5 flex flex-wrap gap-2 text-xs text-muted">
+        <p className="m-0 mt-0.5 flex flex-wrap gap-x-2 text-xs text-muted">
           <span>{CATEGORY_LABELS[item.category]}</span>
-          {item.note && <span>{item.note}</span>}
+          {item.note && <span className="min-w-0 truncate">{item.note}</span>}
         </p>
       </div>
 
-      <div className="whitespace-nowrap text-right text-sm leading-tight">
+      <div className="sched-row__due whitespace-nowrap text-right text-sm leading-tight">
         <span className="block font-semibold tabular-nums">
           {formatDate(item.dueDate, item.dueApprox)}
         </span>
@@ -80,13 +80,15 @@ function Row({ item, today, on }: { item: ScheduleItem; today: string; on: RowHa
         )}
       </div>
 
-      <div className="min-w-[6rem] whitespace-nowrap text-right font-bold tabular-nums">
+      <div className="sched-row__amount whitespace-nowrap text-right font-bold tabular-nums">
         {formatYen(item.amount, item.amountApprox)}
       </div>
 
-      <StatusChip item={item} />
+      <div className="sched-row__status">
+        <StatusChip item={item} />
+      </div>
 
-      <div className="flex gap-1">
+      <div className="sched-row__actions flex gap-1">
         <Button size="sm" variant="ghost" onPress={() => on.onEdit(item.id)} aria-label="編集">
           編集
         </Button>
