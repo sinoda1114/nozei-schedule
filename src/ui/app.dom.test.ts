@@ -49,7 +49,7 @@ afterEach(() => {
 });
 
 describe('認証ゲート', () => {
-  test('401 ならパスフレーズ入力ゲートを表示する', async () => {
+  test('401 ならログインゲート（リカバリコード入力）を表示する', async () => {
     await loadApp({ status: 401 });
     await vi.waitFor(() => {
       expect(document.querySelector('.gate input[type="password"]')).not.toBeNull();

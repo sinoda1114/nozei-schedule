@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 // .dev.vars の APP_PASSPHRASE と一致させること
 const PASSPHRASE = 'test-pass-1234567890';
 
-test('パスフレーズログイン → この端末をパスキー登録 → ログアウト → パスキーでログイン', async ({
+test('リカバリコードログイン → この端末をパスキー登録 → ログアウト → パスキーでログイン', async ({
   page,
 }) => {
   // --- CDP 仮想認証器をセットアップ（指紋/Touch ID の代わり） ---
@@ -27,7 +27,7 @@ test('パスフレーズログイン → この端末をパスキー登録 → �
 
   await page.goto('/');
 
-  // --- 1) パスフレーズでログイン ---
+  // --- 1) リカバリコード（旧パスフレーズ）でログイン ---
   await expect(page.locator('.gate')).toBeVisible();
   await page.fill('.js-gate-form input[name="pass"]', PASSPHRASE);
   await page.click('.js-gate-form button[type="submit"]');

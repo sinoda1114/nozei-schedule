@@ -72,7 +72,7 @@ async function boot(): Promise<void> {
   }
 }
 
-// ---- ログインゲート（パスキー / パスフレーズ） ----
+// ---- ログインゲート（パスキー / リカバリコード） ----
 function renderGate(message = ''): void {
   const passkeyBlock = passkeySupported()
     ? `<button type="button" class="btn btn--primary gate__passkey js-passkey-login">パスキーでログイン</button>
@@ -86,8 +86,8 @@ function renderGate(message = ''): void {
         ${passkeyBlock}
         <form class="gate__form js-gate-form">
           <input type="password" class="field__input" name="pass" autocomplete="current-password"
-            placeholder="パスフレーズ" required />
-          <button type="submit" class="btn btn--ghost">パスフレーズでログイン</button>
+            placeholder="リカバリコード" required />
+          <button type="submit" class="btn btn--ghost">リカバリコードでログイン</button>
         </form>
         <p class="form__error js-gate-error" ${message ? '' : 'hidden'}>${escapeText(message)}</p>
       </div>
@@ -222,7 +222,7 @@ function wireAppEvents(): void {
   (app.querySelector('.js-logout') as HTMLElement).addEventListener('click', () => {
     closeMenu();
     clearToken();
-    renderGate('ログアウトしました。パスフレーズを入力してください。');
+    renderGate('ログアウトしました。再度ログインしてください。');
   });
   const regBtn = app.querySelector('.js-register-passkey');
   if (regBtn) {
@@ -264,7 +264,7 @@ async function persist(): Promise<void> {
     window.setTimeout(() => setSaveStatus(''), 1800);
   } catch (err) {
     if (err instanceof AuthError) {
-      renderGate('認証が切れました。パスフレーズを再入力してください。');
+      renderGate('認証の有効期限が切れました。再度ログインしてください。');
       return;
     }
     if (err instanceof ConflictError) {

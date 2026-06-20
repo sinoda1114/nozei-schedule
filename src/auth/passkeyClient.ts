@@ -45,10 +45,10 @@ export async function loginWithPasskey(): Promise<string> {
   return readSessionToken(verRes);
 }
 
-/** パスフレーズでログイン → セッショントークン */
+/** リカバリコード（旧称パスフレーズ）でログイン → セッショントークン */
 export async function loginWithPassphrase(passphrase: string): Promise<string> {
   const res = await postJson(`${AUTH}/passphrase/login`, { passphrase });
-  if (res.status === 401) throw new Error('パスフレーズが違います');
+  if (res.status === 401) throw new Error('リカバリコードが違います');
   if (!res.ok) throw new Error('ログインに失敗しました');
   return readSessionToken(res);
 }
