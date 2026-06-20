@@ -4,10 +4,11 @@
 管理する小さな Web アプリ。複数デバイスから同じデータを見られるよう、
 データは Cloudflare KV に保存する。
 
-- フロント: Vite + TypeScript（フレームワーク無し・軽量バニラ）
+- フロント: Vite + React 19 + TypeScript / UI は HeroUI v3（Tailwind CSS v4）
 - API: Cloudflare Pages Functions (`functions/api/schedule.ts`)
 - 保存: Cloudflare KV（スケジュール全体を1個のJSONドキュメントで保持）
-- 認証: 共有パスフレーズ（`Authorization: Bearer`、サーバー側で定数時間比較）
+- 認証: パスキー(WebAuthn/FIDO2) を主、リカバリコード（旧称パスフレーズ）を保険に。
+  ログイン成功で HMAC 署名セッショントークンを発行し `Authorization: Bearer` で送る。
 
 ## 機能
 

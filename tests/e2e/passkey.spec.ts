@@ -20,37 +20,32 @@ test('リカバリコードログイン → この端末をパスキー登録 �
     },
   });
 
-  // 端末名プロンプト(window.prompt)を自動承認
-  page.on('dialog', (dialog) => {
-    void dialog.accept('E2E Device');
-  });
-
   await page.goto('/');
 
   // --- 1) リカバリコード（旧パスフレーズ）でログイン ---
-  await expect(page.locator('.gate')).toBeVisible();
-  await page.fill('.js-gate-form input[name="pass"]', PASSPHRASE);
-  await page.click('.js-gate-form button[type="submit"]');
-  await expect(page.locator('.topbar')).toBeVisible();
+  await expect(page.getByTestId('gate-form')).toBeVisible();
+  await page.getByTestId('recovery-input').fill(PASSPHRASE);
+  await page.getByTestId('recovery-submit').click();
+  await expect(page.getByTestId('topbar')).toBeVisible();
 
   // --- 2) この端末をパスキー登録 ---
-  await page.click('.js-menu-btn');
-  await page.click('.js-register-passkey');
-  await expect(page.locator('.js-save-status')).toContainText('登録しました', { timeout: 15_000 });
+  await page.getByTestId('menu-btn').click();
+  await page.getByRole('menuitem', { name: 'この端末をパスキー登録' }).click();
+  await expect(page.getByTestId('save-status')).toContainText('登録しました', { timeout: 15_000 });
 
   // 仮想認証器に資格情報が1つ以上登録されたことを確認
   const after = await client.send('WebAuthn.getCredentials', { authenticatorId });
   expect(after.credentials.length).toBeGreaterThanOrEqual(1);
 
   // --- 3) ログアウト ---
-  await page.click('.js-menu-btn');
-  await page.click('.js-logout');
-  await expect(page.locator('.gate')).toBeVisible();
+  await page.getByTestId('menu-btn').click();
+  await page.getByRole('menuitem', { name: 'ログアウト' }).click();
+  await expect(page.getByTestId('gate-form')).toBeVisible();
 
   // --- 4) パスキーでログイン（仮想認証器が自動応答） ---
-  await page.click('.js-passkey-login');
-  await expect(page.locator('.topbar')).toBeVisible();
+  await page.getByTestId('passkey-login').click();
+  await expect(page.getByTestId('topbar')).toBeVisible();
 
   // ログイン後、エラーメッセージが表示されていないこと
-  await expect(page.locator('.js-gate-error')).toHaveCount(0);
+  await expect(page.getByTestId('gate-error')).toHaveCount(0);
 });
