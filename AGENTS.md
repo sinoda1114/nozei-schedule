@@ -19,15 +19,15 @@ Nozei Schedule（Cloudflare Pages + Vite + TS）の AI 向けプロジェクト�
 | リポ実体 dir（統合＋デプロイ専用・ここで機能開発しない） | `~/dev/nozei-schedule` |
 | GitHub | `sinoda1114/nozei-schedule` |
 | スタック | Cloudflare Pages + Vite + TypeScript + vitest（E2E: Playwright）/ KV |
-| デプロイ基盤 | Cloudflare Pages（git 駆動・feature push = Preview / main = Production）※下記要確認 |
+| デプロイ基盤 | Cloudflare Pages（**Direct Upload・手動 `npm run deploy`**）。git 連携の自動デプロイは無効。下記参照 |
 | 本番 URL | https://nozei-schedule.pages.dev （独自ドメインがあれば差し替え） |
 | タスク正本 | GitHub Issue / Project「Nozei Schedule Tasks」 |
 
-### デプロイ（要確認）
-- **想定**: Cloudflare Pages の Git 連携で `main` マージ = Production / feature push = Preview を自動デプロイ。
-- **要確認**: Cloudflare ダッシュボードで Git 連携（Production Branch = `main`・Preview 有効）が実際に有効か。
-  - 有効なら: **手動デプロイしない**。マージ後に Pages のデプロイ発火を確認する。
-  - 未連携なら: `npm run deploy`（= `wrangler pages deploy dist`）の手動デプロイ。その場合は「リリースは1経路・本番を手動で二重化しない」原則だけ守る。
+### デプロイ（実態: Direct Upload / 手動 1 経路）
+- **確認済み（2026-06-20）**: Cloudflare Pages は **Direct Upload**。リリースは `npm run deploy`（= `npm run build && wrangler pages deploy dist`）の **手動 1 経路**。GitHub の push / merge では自動デプロイされない（GitHub Actions は CI のみで deploy ステップ無し・`wrangler pages deployment list` の履歴も CLI 由来）。
+  - 判断根拠は wrangler / Actions の状態。**最終的な git 連携の有無は Cloudflare ダッシュボードが正本**（画面が見える人が確認する）。
+- **手順**: `main` へマージ後、リポ実体 dir で `npm run deploy`（要 `wrangler login`）→ 本番 https://nozei-schedule.pages.dev が新バンドルを配信するか確認する。
+- 「**リリースは 1 経路・本番を手動で二重化しない**」原則を守る。将来 git 連携を有効化する場合は、手動デプロイを廃止してどちらか一方に統一する。
 
 ## 役割境界（このプロジェクト）
 
