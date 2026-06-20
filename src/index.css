@@ -69,6 +69,48 @@
   }
 }
 
+/* ---------- 明細行レイアウト（広幅=1行 / スマホ=areasリフロー） ---------- */
+/* 広幅: check / main / due / amount / status / actions の6カラム横並び */
+.sched-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto auto;
+  align-items: center;
+  column-gap: 0.75rem;
+  row-gap: 0.4rem;
+}
+
+/* スマホ: 固定多カラムだと横はみ出し＋ラベル1文字折返しになるため、3カラムのareasへ畳む */
+@media (max-width: 640px) {
+  .sched-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "check main   main"
+      "check due    amount"
+      "check status actions";
+  }
+  .sched-row__check {
+    grid-area: check;
+  }
+  .sched-row__main {
+    grid-area: main;
+  }
+  .sched-row__due {
+    grid-area: due;
+    text-align: left;
+  }
+  .sched-row__amount {
+    grid-area: amount;
+  }
+  .sched-row__status {
+    grid-area: status;
+    justify-self: start;
+  }
+  .sched-row__actions {
+    grid-area: actions;
+    justify-self: end;
+  }
+}
+
 /* ---------- タイムライン SVG（HeroUI に等価物が無いため独自スタイル） ---------- */
 .tl-axis {
   stroke: var(--line);
