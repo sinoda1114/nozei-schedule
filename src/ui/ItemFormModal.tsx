@@ -16,7 +16,9 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { today as todayStr } from '../lib/today';
 import { CATEGORY_LABELS, type ScheduleItem, type TaxCategory } from '../types';
 
-const CATEGORY_OPTIONS: TaxCategory[] = ['residence', 'income', 'business', 'other'];
+const CATEGORY_OPTIONS: TaxCategory[] = [
+  'residence', 'income', 'business', 'property', 'vehicle', 'consumption', 'withholding', 'other',
+];
 
 interface FormState {
   category: TaxCategory;

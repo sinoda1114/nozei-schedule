@@ -14,10 +14,14 @@
     --overdue: oklch(55% 0.2 25);
 
     /* category accents（タイムライン・行の色分け） */
-    --cat-residence: oklch(52% 0.22 250);  /* 青 */
-    --cat-income:    oklch(52% 0.18 155);  /* 緑 */
-    --cat-business:  oklch(54% 0.20 310);  /* ピンク */
-    --cat-other:     oklch(56% 0.05 270);  /* グレー */
+    --cat-residence:   oklch(52% 0.22 250);  /* 青   市民税・県民税 */
+    --cat-income:      oklch(52% 0.18 155);  /* 緑   所得税予定納税 */
+    --cat-business:    oklch(54% 0.20 310);  /* ピンク 個人事業税 */
+    --cat-property:    oklch(55% 0.18  50);  /* オレンジ 固定資産税 */
+    --cat-vehicle:     oklch(52% 0.18 195);  /* シアン 自動車税 */
+    --cat-consumption: oklch(52% 0.20 285);  /* 紫   消費税 */
+    --cat-withholding: oklch(56% 0.16  80);  /* 黄緑  源泉所得税 */
+    --cat-other:       oklch(56% 0.05 270);  /* グレー その他 */
 
     /* 「次の納付」ヒーローのグラデーション端点 */
     --next-from: oklch(48% 0.13 265);
@@ -39,10 +43,14 @@
     --paid: oklch(72% 0.13 155);
     --overdue: oklch(70% 0.18 25);
 
-    --cat-residence: oklch(68% 0.24 250);  /* 青 */
-    --cat-income:    oklch(70% 0.20 155);  /* 緑 */
-    --cat-business:  oklch(72% 0.22 310);  /* ピンク */
-    --cat-other:     oklch(66% 0.05 270);  /* グレー */
+    --cat-residence:   oklch(68% 0.24 250);  /* 青   市民税・県民税 */
+    --cat-income:      oklch(70% 0.20 155);  /* 緑   所得税予定納税 */
+    --cat-business:    oklch(72% 0.22 310);  /* ピンク 個人事業税 */
+    --cat-property:    oklch(72% 0.20  50);  /* オレンジ 固定資産税 */
+    --cat-vehicle:     oklch(70% 0.20 195);  /* シアン 自動車税 */
+    --cat-consumption: oklch(70% 0.22 285);  /* 紫   消費税 */
+    --cat-withholding: oklch(74% 0.18  80);  /* 黄緑  源泉所得税 */
+    --cat-other:       oklch(66% 0.05 270);  /* グレー その他 */
 
     --next-from: oklch(40% 0.1 265);
     --next-to: oklch(34% 0.12 280);
