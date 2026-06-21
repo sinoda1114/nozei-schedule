@@ -8,6 +8,19 @@ export interface AuthEnv {
   SCHEDULE_KV: KVNamespace;
   APP_PASSPHRASE?: string;
   SESSION_SECRET?: string;
+  DEV_USER_EMAIL?: string; // ローカル開発用: CF Access の代替
+}
+
+/**
+ * CF Access が付与するヘッダーからユーザーの email を取得する。
+ * ローカル開発時は DEV_USER_EMAIL を使う。
+ * CF Access が未設定（本番移行期間中）は null を返す。
+ */
+export function cfAccessEmail(request: Request, env: AuthEnv): string | null {
+  const header = request.headers.get('CF-Access-Authenticated-User-Email');
+  if (header && header.trim() !== '') return header.trim().toLowerCase();
+  if (env.DEV_USER_EMAIL?.trim()) return env.DEV_USER_EMAIL.trim().toLowerCase();
+  return null;
 }
 
 const enc = new TextEncoder();
