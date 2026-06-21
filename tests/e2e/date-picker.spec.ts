@@ -39,9 +39,7 @@ test('2. キーボード入力で日付をセットして追加できる', async
   const spinners = dialog.getByRole('spinbutton');
   await spinners.first().click();
 
-  // React Aria DateSegment は順番に入力が進む
-  // ロケールにより YYYY/MM/DD または MM/DD/YYYY の順になるが、
-  // 年 4 桁 → Tab → 月 2 桁 → Tab → 日 2 桁 の流れで埋める
+  // React Aria DateSegment: playwright.config.ts で locale='ja-JP' を設定済み → YYYY/MM/DD 順
   await page.keyboard.type('2027');
   await page.keyboard.press('Tab');
   await page.keyboard.type('03');
