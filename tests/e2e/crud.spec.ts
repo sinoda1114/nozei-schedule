@@ -21,7 +21,16 @@ test('リカバリコードログイン → 追加モーダルで明細を1件�
   // 入力（一意なラベルで衝突回避）
   const label = `E2E自動テスト納付-${Date.now()}`;
   await dialog.locator('input[name="label"]').fill(label);
-  await dialog.locator('input[name="dueDate"]').fill('2027-03-10');
+
+  // 納付期限: DatePicker の spinbutton セグメントへキーボード入力
+  const spinners = dialog.getByRole('spinbutton');
+  await spinners.first().click();
+  await page.keyboard.type('2027');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('03');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('10');
+
   await dialog.locator('input[name="amount"]').fill('12345');
 
   // 送信
