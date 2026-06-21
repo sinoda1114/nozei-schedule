@@ -5,9 +5,13 @@ export type EntryStatus = 'confirmed' | 'estimated';
 
 /** 税目カテゴリ（色分け・集計の単位） */
 export type TaxCategory =
-  | 'residence' // 市民税・県民税
-  | 'income' // 所得税予定納税
-  | 'business' // 個人事業税
+  | 'residence'   // 市民税・県民税
+  | 'income'      // 所得税予定納税
+  | 'business'    // 個人事業税
+  | 'property'    // 固定資産税
+  | 'vehicle'     // 自動車税
+  | 'consumption' // 消費税
+  | 'withholding' // 源泉所得税
   | 'other';
 
 export interface ScheduleItem {
@@ -43,10 +47,14 @@ export interface ScheduleDoc {
 }
 
 export const CATEGORY_LABELS: Record<TaxCategory, string> = {
-  residence: '市民税・県民税',
-  income: '所得税予定納税',
-  business: '個人事業税',
-  other: 'その他',
+  residence:   '市民税・県民税',
+  income:      '所得税予定納税',
+  business:    '個人事業税',
+  property:    '固定資産税',
+  vehicle:     '自動車税',
+  consumption: '消費税',
+  withholding: '源泉所得税',
+  other:       'その他',
 };
 
 export const DOC_VERSION = 1;

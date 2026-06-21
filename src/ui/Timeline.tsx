@@ -7,10 +7,14 @@ import { formatMonthDay, formatYen, parseYmd } from '../lib/format';
 import { type ScheduleItem, type TaxCategory } from '../types';
 
 const CATEGORY_VAR: Record<TaxCategory, string> = {
-  residence: 'var(--cat-residence)',
-  income: 'var(--cat-income)',
-  business: 'var(--cat-business)',
-  other: 'var(--cat-other)',
+  residence:   'var(--cat-residence)',
+  income:      'var(--cat-income)',
+  business:    'var(--cat-business)',
+  property:    'var(--cat-property)',
+  vehicle:     'var(--cat-vehicle)',
+  consumption: 'var(--cat-consumption)',
+  withholding: 'var(--cat-withholding)',
+  other:       'var(--cat-other)',
 };
 
 const BASE_Y = 150;
@@ -120,6 +124,22 @@ export function TimelineLegend(): ReactNode {
       <span className="inline-flex items-center gap-1.5">
         <span className="size-3 rounded-[3px]" style={{ background: 'var(--cat-business)' }} />
         事業税
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <span className="size-3 rounded-[3px]" style={{ background: 'var(--cat-property)' }} />
+        固定資産税
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <span className="size-3 rounded-[3px]" style={{ background: 'var(--cat-vehicle)' }} />
+        自動車税
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <span className="size-3 rounded-[3px]" style={{ background: 'var(--cat-consumption)' }} />
+        消費税
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <span className="size-3 rounded-[3px]" style={{ background: 'var(--cat-withholding)' }} />
+        源泉所得税
       </span>
       <span className="inline-flex items-center gap-1.5">
         <span

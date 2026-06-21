@@ -6,10 +6,14 @@ import { formatDate, formatRelativeDays, formatYen } from '../lib/format';
 import { CATEGORY_LABELS, type ScheduleItem, type TaxCategory } from '../types';
 
 const CATEGORY_VAR: Record<TaxCategory, string> = {
-  residence: 'var(--cat-residence)',
-  income: 'var(--cat-income)',
-  business: 'var(--cat-business)',
-  other: 'var(--cat-other)',
+  residence:   'var(--cat-residence)',
+  income:      'var(--cat-income)',
+  business:    'var(--cat-business)',
+  property:    'var(--cat-property)',
+  vehicle:     'var(--cat-vehicle)',
+  consumption: 'var(--cat-consumption)',
+  withholding: 'var(--cat-withholding)',
+  other:       'var(--cat-other)',
 };
 
 interface RowHandlers {
