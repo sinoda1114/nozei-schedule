@@ -3,7 +3,10 @@
 
 import {
   Button,
+  Calendar,
   Checkbox,
+  DateField,
+  DatePicker,
   Input,
   Label,
   ListBox,
@@ -12,6 +15,7 @@ import {
   TextArea,
   TextField,
 } from '@heroui/react';
+import { parseDate } from '@internationalized/date';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { today as todayStr } from '../lib/today';
 import { CATEGORY_LABELS, type ScheduleItem, type TaxCategory } from '../types';
@@ -46,6 +50,37 @@ function initialState(existing?: ScheduleItem): FormState {
     paidDate: existing?.paidDate ?? todayStr(),
     note: existing?.note ?? '',
   };
+}
+
+function safeParseDate(str: string) {
+  if (!str) return null;
+  try { return parseDate(str); } catch { return null; }
+}
+
+function DateCalendarPopover() {
+  return (
+    <DatePicker.Popover>
+      <Calendar>
+        <Calendar.Header>
+          <Calendar.NavButton slot="previous" />
+          <Calendar.Heading />
+          <Calendar.NavButton slot="next" />
+        </Calendar.Header>
+        <Calendar.Grid>
+          <Calendar.GridHeader>
+            {(day: string) => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
+          </Calendar.GridHeader>
+          <Calendar.GridBody>
+            {(date) => (
+              <Calendar.Cell date={date}>
+                <Calendar.CellIndicator />
+              </Calendar.Cell>
+            )}
+          </Calendar.GridBody>
+        </Calendar.Grid>
+      </Calendar>
+    </DatePicker.Popover>
+  );
 }
 
 export function ItemFormModal({
@@ -142,10 +177,18 @@ export function ItemFormModal({
               </TextField>
 
               <div className="grid grid-cols-[1fr_auto] items-end gap-3.5">
-                <TextField type="date" value={form.dueDate} onChange={(v) => set('dueDate', v)} isRequired>
+                <DatePicker
+                  value={safeParseDate(form.dueDate)}
+                  onChange={(v) => set('dueDate', v?.toString() ?? '')}
+                  isRequired
+                >
                   <Label>納付期限 *</Label>
-                  <Input name="dueDate" />
-                </TextField>
+                  <DatePicker.Trigger>
+                    <DateField />
+                    <DatePicker.TriggerIndicator />
+                  </DatePicker.Trigger>
+                  <DateCalendarPopover />
+                </DatePicker>
                 <Checkbox isSelected={form.dueApprox} onChange={(v) => set('dueApprox', v)}>
                   「〜月ごろ」表記
                 </Checkbox>
@@ -190,10 +233,17 @@ export function ItemFormModal({
               </div>
 
               {form.paid && (
-                <TextField type="date" value={form.paidDate} onChange={(v) => set('paidDate', v)}>
+                <DatePicker
+                  value={safeParseDate(form.paidDate)}
+                  onChange={(v) => set('paidDate', v?.toString() ?? '')}
+                >
                   <Label>支払日</Label>
-                  <Input name="paidDate" />
-                </TextField>
+                  <DatePicker.Trigger>
+                    <DateField />
+                    <DatePicker.TriggerIndicator />
+                  </DatePicker.Trigger>
+                  <DateCalendarPopover />
+                </DatePicker>
               )}
 
               <TextField value={form.note} onChange={(v) => set('note', v)}>
