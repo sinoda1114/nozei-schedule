@@ -31,6 +31,10 @@ interface PagesContext {
 const KV_KEY_LEGACY = 'schedule:doc';
 const kvKeyForUser = (email: string): string => `schedule:doc:${email}`;
 
+// CF Access 導入前のデータ（schedule:doc）を per-user キーへ一度だけ移行するための対象メール。
+// 移行が完了（= per-user キーに保存済み）したらこの定数ごと削除してよい。
+const MIGRATION_OWNER_EMAIL = 'sinoda1114@gmail.com';
+
 const MAX_BODY_BYTES = 256 * 1024;
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
@@ -100,7 +104,17 @@ export const onRequestGet = async ({ request, env }: PagesContext): Promise<Resp
   const kvKey = await resolveKvKey(request, env);
   if (!kvKey) return json({ error: 'unauthorized' }, 401);
 
-  const stored = await env.SCHEDULE_KV.get(kvKey);
+  let stored = await env.SCHEDULE_KV.get(kvKey);
+
+  // オーナーの初回アクセス時のみ: schedule:doc → per-user キーへ書き込み移行
+  if (!stored && kvKey === kvKeyForUser(MIGRATION_OWNER_EMAIL)) {
+    const legacy = await env.SCHEDULE_KV.get(KV_KEY_LEGACY);
+    if (legacy) {
+      await env.SCHEDULE_KV.put(kvKey, legacy);
+      stored = legacy;
+    }
+  }
+
   return new Response(stored ?? emptyDoc(), { status: 200, headers: JSON_HEADERS });
 };
 
