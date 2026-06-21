@@ -23,7 +23,7 @@ function StatCard({
 }): ReactNode {
   return (
     <Card
-      className={`relative overflow-hidden p-4 shadow-none sm:p-5 ${
+      className={`relative p-4 shadow-none sm:p-5 ${
         accent
           ? 'bg-accent-soft ring-1 ring-inset ring-[var(--accent)]/25 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-[var(--accent)]/60 before:to-transparent'
           : 'bg-surface ring-1 ring-inset ring-border'
@@ -33,7 +33,7 @@ function StatCard({
         {label}
       </p>
       <p
-        className={`num m-0 mt-2 text-[1.7rem] font-black leading-none tracking-tight ${valueClass ?? ''}`}
+        className={`num m-0 mt-2 text-[clamp(1.1rem,3.5vw,1.7rem)] font-black leading-none tracking-tight ${valueClass ?? ''}`}
       >
         {value}
       </p>
