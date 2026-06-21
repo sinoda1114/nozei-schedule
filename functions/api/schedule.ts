@@ -2,8 +2,14 @@
 // GET  -> KV からスケジュールJSONを返す（updatedAt を含む）
 // PUT  -> 受け取ったJSONを検証し、楽観ロックを通過した場合のみ KV に保存
 //
-// 認証: _lib/auth の isAuthorized を使用。Authorization: Bearer <token> が
-//       セッショントークン(HMAC) または 旧パスフレーズ(移行フォールバック) なら許可。
+// 認証（2モード）:
+//   CF Access モード: CF-Access-Authenticated-User-Email ヘッダーを使用（本番）
+//   レガシーモード:   旧パスフレーズ/セッショントークン（CF Access 設定前の移行期間）
+//   ローカル開発:     DEV_USER_EMAIL 環境変数で代替
+//
+// KV キー:
+//   CF Access モード: schedule:doc:{email}（ユーザーごとに独立）
+//   レガシーモード:   schedule:doc（後方互換・共有）
 //
 // 並行制御: クライアントは「読み込んだ時点の updatedAt」を
 //   X-Expected-UpdatedAt ヘッダで送る。KV 上の現在値と一致しない場合は
@@ -14,15 +20,18 @@ import {
   evaluatePrecondition,
   readStoredUpdatedAt,
 } from '../../src/lib/concurrency';
-import { type AuthEnv, isAuthorized, json } from '../_lib/auth';
+import { type AuthEnv, cfAccessEmail, isAuthorized, json } from '../_lib/auth';
 
 interface PagesContext {
   request: Request;
   env: AuthEnv;
 }
 
-const KV_KEY = 'schedule:doc';
-const MAX_BODY_BYTES = 256 * 1024; // 念のための上限（このアプリのデータは数KB）
+// CF Access モード: ユーザーごとのキー。レガシー（移行期間中）: 共有キー。
+const KV_KEY_LEGACY = 'schedule:doc';
+const kvKeyForUser = (email: string): string => `schedule:doc:${email}`;
+
+const MAX_BODY_BYTES = 256 * 1024;
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
 
@@ -33,7 +42,22 @@ function emptyDoc(): string {
 const MAX_ITEMS = 500;
 const MAX_STR = 200;
 const MAX_NOTE = 1000;
-const VALID_CATEGORIES = new Set(['residence', 'income', 'business', 'other']);
+const VALID_CATEGORIES = new Set([
+  'residence', 'income', 'business', 'property', 'vehicle', 'consumption', 'withholding', 'other',
+]);
+
+/**
+ * リクエストを認証して KV キーを解決する。
+ * - CF Access ヘッダーあり / DEV_USER_EMAIL あり → per-user キー
+ * - 旧パスフレーズ認証成功 → レガシー共有キー（CF Access 設定前の移行期間フォールバック）
+ * - 未認証 → null
+ */
+async function resolveKvKey(request: Request, env: AuthEnv): Promise<string | null> {
+  const email = cfAccessEmail(request, env);
+  if (email) return kvKeyForUser(email);
+  if (await isAuthorized(request, env)) return KV_KEY_LEGACY;
+  return null;
+}
 
 /** 保存前の最小バリデーション。items が配列かつ上限内かだけ確認する。 */
 function isValidDoc(value: unknown): value is { items: unknown[]; version?: unknown } {
@@ -73,13 +97,22 @@ function sanitizeItem(input: unknown): Record<string, unknown> {
 }
 
 export const onRequestGet = async ({ request, env }: PagesContext): Promise<Response> => {
-  if (!(await isAuthorized(request, env))) return json({ error: 'unauthorized' }, 401);
-  const stored = await env.SCHEDULE_KV.get(KV_KEY);
+  const kvKey = await resolveKvKey(request, env);
+  if (!kvKey) return json({ error: 'unauthorized' }, 401);
+
+  let stored = await env.SCHEDULE_KV.get(kvKey);
+
+  // CF Access モード初回アクセス時: レガシーキーにデータがあれば透過的に引き継ぐ
+  if (!stored && kvKey !== KV_KEY_LEGACY) {
+    stored = await env.SCHEDULE_KV.get(KV_KEY_LEGACY);
+  }
+
   return new Response(stored ?? emptyDoc(), { status: 200, headers: JSON_HEADERS });
 };
 
 export const onRequestPut = async ({ request, env }: PagesContext): Promise<Response> => {
-  if (!(await isAuthorized(request, env))) return json({ error: 'unauthorized' }, 401);
+  const kvKey = await resolveKvKey(request, env);
+  if (!kvKey) return json({ error: 'unauthorized' }, 401);
 
   const raw = await request.text();
   if (raw.length > MAX_BODY_BYTES) return json({ error: 'payload too large' }, 413);
@@ -92,10 +125,9 @@ export const onRequestPut = async ({ request, env }: PagesContext): Promise<Resp
   }
   if (!isValidDoc(parsed)) return json({ error: 'invalid schema' }, 422);
 
-  // 楽観的並行制御: KV 上の現在 updatedAt とクライアントの期待値を照合する。
-  // 不一致なら他端末が先に更新しているので上書きせず 409 を返す。
+  // 楽観的並行制御
   const expected = request.headers.get(EXPECTED_UPDATED_AT_HEADER);
-  const stored = await env.SCHEDULE_KV.get(KV_KEY);
+  const stored = await env.SCHEDULE_KV.get(kvKey);
   const current = readStoredUpdatedAt(stored);
   const precondition = evaluatePrecondition(expected, current);
   if (!precondition.ok) {
@@ -107,6 +139,6 @@ export const onRequestPut = async ({ request, env }: PagesContext): Promise<Resp
     updatedAt: new Date().toISOString(),
     items: parsed.items.map(sanitizeItem),
   };
-  await env.SCHEDULE_KV.put(KV_KEY, JSON.stringify(doc));
+  await env.SCHEDULE_KV.put(kvKey, JSON.stringify(doc));
   return json({ ok: true, updatedAt: doc.updatedAt });
 };
