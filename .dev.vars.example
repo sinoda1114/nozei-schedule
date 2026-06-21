@@ -1,3 +1,9 @@
 # ローカルで `wrangler pages dev` を動かすときの秘密情報サンプル。
 # このファイルを .dev.vars にコピーして値を設定する（.dev.vars は .gitignore 済み）。
 APP_PASSPHRASE=change-me-to-a-long-random-passphrase
+
+# 画像/動画解析(Gemini)用。未設定ならスタブ動作（モック候補）。
+# 本番は Cloudflare Pages の secret に設定する: wrangler pages secret put ANALYZER_API_KEY
+ANALYZER_API_KEY=
+# 省略時は gemini-3.1-flash-lite
+ANALYZER_MODEL=

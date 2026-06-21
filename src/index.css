@@ -14,10 +14,10 @@
     --overdue: oklch(55% 0.2 25);
 
     /* category accents（タイムライン・行の色分け） */
-    --cat-residence: oklch(55% 0.13 265);
-    --cat-income: oklch(55% 0.13 200);
-    --cat-business: oklch(58% 0.13 300);
-    --cat-other: oklch(60% 0.02 265);
+    --cat-residence: oklch(52% 0.22 250);  /* 青 */
+    --cat-income:    oklch(52% 0.18 155);  /* 緑 */
+    --cat-business:  oklch(54% 0.20 310);  /* ピンク */
+    --cat-other:     oklch(56% 0.05 270);  /* グレー */
 
     /* 「次の納付」ヒーローのグラデーション端点 */
     --next-from: oklch(48% 0.13 265);
@@ -39,20 +39,37 @@
     --paid: oklch(72% 0.13 155);
     --overdue: oklch(70% 0.18 25);
 
-    --cat-residence: oklch(68% 0.13 265);
-    --cat-income: oklch(70% 0.12 200);
-    --cat-business: oklch(72% 0.12 300);
-    --cat-other: oklch(66% 0.02 265);
+    --cat-residence: oklch(68% 0.24 250);  /* 青 */
+    --cat-income:    oklch(70% 0.20 155);  /* 緑 */
+    --cat-business:  oklch(72% 0.22 310);  /* ピンク */
+    --cat-other:     oklch(66% 0.05 270);  /* グレー */
 
     --next-from: oklch(40% 0.1 265);
     --next-to: oklch(34% 0.12 280);
     --next-overdue-from: oklch(48% 0.18 25);
     --next-overdue-to: oklch(40% 0.16 20);
+
+    /* ---- ダークラグジュアリー: 面とボーダーの質感を上書き ---- */
+    /* 背景をさらに沈めてカードを浮かせる。わずかに青みを残して無機質にしない */
+    --background: oklch(9.5% 0.008 280);
+    /* カード面は背景よりほんの少し持ち上げる程度（強い差を付けない） */
+    --surface: oklch(17.5% 0.007 282);
+    /* ボーダーは存在を主張させず、面の輪郭をなぞる程度に繊細化 */
+    --border: oklch(26% 0.006 286);
+    /* ラベル類は一段落として、数字を主役に */
+    --muted: oklch(64% 0.012 286);
   }
 
   body {
     margin: 0;
     background: var(--background);
+    /* 上部に柔らかなアクセント光、下部にごく淡い藍 → 平面的な黒を避け奥行きを出す。
+       彩度は抑え、にじむように広げて「上質」を演出（ラグジュアリー方向） */
+    background-image:
+      radial-gradient(ellipse 90% 55% at 50% -8%, oklch(34% 0.07 280 / 0.28) 0%, transparent 62%),
+      radial-gradient(ellipse 70% 50% at 50% 105%, oklch(28% 0.05 250 / 0.18) 0%, transparent 60%);
+    background-attachment: fixed;
+    min-height: 100dvh;
     color: var(--foreground);
     font-family:
       "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, -apple-system,
@@ -60,12 +77,19 @@
     line-height: 1.6;
     font-feature-settings: "palt";
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   #app {
     max-width: 880px;
     margin: 0 auto;
-    padding: clamp(1rem, 0.5rem + 2vw, 2rem);
+    padding: clamp(1.25rem, 0.5rem + 2.5vw, 2.5rem);
+  }
+
+  /* 金額・数値は等幅＋わずかにトラッキングを詰めて、桁の通りを良くする */
+  .num {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
   }
 }
 

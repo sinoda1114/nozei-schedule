@@ -2,7 +2,7 @@
 // 旧 ui/timeline.ts（HTML文字列）の純粋ロジックを React/JSX に移植したもの。
 
 import { Fragment, type ReactNode } from 'react';
-import { isOverdue, nextUnpaid, sortByDue } from '../lib/calc';
+import { nextUnpaid, sortByDue } from '../lib/calc';
 import { formatMonthDay, formatYen, parseYmd } from '../lib/format';
 import { type ScheduleItem, type TaxCategory } from '../types';
 
@@ -30,21 +30,18 @@ function Bar({
   barW,
   maxAmount,
   isNext,
-  today,
 }: {
   item: ScheduleItem;
   cx: number;
   barW: number;
   maxAmount: number;
   isNext: boolean;
-  today: string;
 }): ReactNode {
   const h = barHeight(item.amount, maxAmount);
   const y = BASE_Y - h;
   const x = cx - barW / 2;
-  const overdue = isOverdue(item, today);
   const hollow = item.amount === null;
-  const color = overdue ? 'var(--overdue)' : CATEGORY_VAR[item.category];
+  const color = CATEGORY_VAR[item.category];
   const labelY = y - 8;
   const amountLabel = hollow ? '未登録' : formatYen(item.amount, item.amountApprox);
 
@@ -180,7 +177,6 @@ export function Timeline({
               barW={barW}
               maxAmount={maxAmount}
               isNext={item.id === next?.id}
-              today={today}
             />
           ))}
         </svg>
