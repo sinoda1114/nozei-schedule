@@ -40,12 +40,11 @@ test('画像/動画から取り込み: アップロード→確認モーダル�
   await expect(page.getByTestId('save-status')).toContainText('保存しました', { timeout: 15_000 });
 });
 
-test('メニューに「画像/動画から取り込み」項目がある', async ({ page }) => {
+test('トップに取り込みドロップゾーンが表示される', async ({ page }) => {
   await page.goto('/');
   await page.getByTestId('recovery-input').fill(PASSPHRASE);
   await page.getByTestId('recovery-submit').click();
   await expect(page.getByTestId('topbar')).toBeVisible();
 
-  await page.getByTestId('menu-btn').click();
-  await expect(page.getByRole('menuitem', { name: '画像/動画から取り込み' })).toBeVisible();
+  await expect(page.getByTestId('media-dropzone')).toBeVisible();
 });

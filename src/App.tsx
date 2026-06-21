@@ -19,6 +19,7 @@ import { type ScheduleItem } from './types';
 import { AnalyzeReviewModal } from './ui/AnalyzeReviewModal';
 import { AppMenu } from './ui/AppMenu';
 import { Gate } from './ui/Gate';
+import { MediaDropZone } from './ui/MediaDropZone';
 import { ItemFormModal } from './ui/ItemFormModal';
 import { NextPayment } from './ui/NextPayment';
 import { ScheduleList } from './ui/ScheduleList';
@@ -52,10 +53,9 @@ export function App(): ReactNode {
     items: [],
   });
   const [notice, setNotice] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
   const passkeyBusy = useRef(false);
-  const mediaBusy = useRef(false);
   const fileInput = useRef<HTMLInputElement>(null);
-  const mediaInput = useRef<HTMLInputElement>(null);
 
   const t = today();
 
@@ -121,17 +121,14 @@ export function App(): ReactNode {
   };
 
   // ---- 画像/動画から取り込み ----
-  const onMediaFile = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
+  const runAnalyze = async (file: File): Promise<void> => {
     const token = getToken();
     if (!token) {
       setNotice('再ログインしてください。');
       return;
     }
-    if (mediaBusy.current) return;
-    mediaBusy.current = true;
+    if (analyzing) return;
+    setAnalyzing(true);
     setNotice('解析中…');
     try {
       const items = await analyzeFile(token, file);
@@ -141,7 +138,7 @@ export function App(): ReactNode {
       setNotice('');
       window.alert(`解析に失敗しました\n${err instanceof Error ? err.message : ''}`);
     } finally {
-      mediaBusy.current = false;
+      setAnalyzing(false);
     }
   };
 
@@ -220,8 +217,12 @@ export function App(): ReactNode {
     <>
       <header className="mb-6 flex flex-wrap items-end justify-between gap-4" data-testid="topbar">
         <div>
-          <h1 className="m-0 text-2xl font-extrabold tracking-tight sm:text-3xl">納税スケジュール</h1>
-          <p className="m-0 mt-0.5 text-sm text-muted">個人事業 / 納付予定の管理</p>
+          <h1 className="m-0 bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-2xl font-black tracking-tight text-transparent sm:text-3xl">
+            納税スケジュール
+          </h1>
+          <p className="m-0 mt-0.5 text-xs font-medium uppercase tracking-widest text-muted">
+            個人事業 / 納付予定の管理
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <span
@@ -237,7 +238,6 @@ export function App(): ReactNode {
           <AppMenu
             passkeySupported={passkeySupported()}
             actions={{
-              onImportMedia: () => mediaInput.current?.click(),
               onExport,
               onImport: () => fileInput.current?.click(),
               onReload: () => void sched.reload(),
@@ -252,10 +252,10 @@ export function App(): ReactNode {
         <NextPayment items={doc.items} today={t} />
         <Summary items={doc.items} />
         {doc.items.length > 0 && (
-          <section className="mb-5 rounded-2xl border border-border bg-surface p-4 shadow-sm">
-            <h2 className="m-0 mb-2 text-sm font-bold text-foreground">
+          <section className="mb-6 rounded-2xl bg-surface p-4 shadow-none ring-1 ring-inset ring-border sm:p-5">
+            <h2 className="m-0 mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-muted">
               年間スケジュール
-              <span className="ml-1.5 text-xs font-semibold text-muted">
+              <span className="ml-2 font-medium normal-case tracking-normal text-muted/80">
                 {timelineRangeLabel(doc.items)}
               </span>
             </h2>
@@ -263,6 +263,7 @@ export function App(): ReactNode {
             <TimelineLegend />
           </section>
         )}
+        <MediaDropZone onFile={(f) => void runAnalyze(f)} busy={analyzing} />
         <ScheduleList
           items={doc.items}
           today={t}
@@ -283,14 +284,6 @@ export function App(): ReactNode {
         accept="application/json"
         hidden
         onChange={(e) => void onImportFile(e)}
-      />
-      <input
-        ref={mediaInput}
-        type="file"
-        accept="image/jpeg,image/png,video/mp4"
-        hidden
-        data-testid="media-input"
-        onChange={(e) => void onMediaFile(e)}
       />
 
       <ItemFormModal

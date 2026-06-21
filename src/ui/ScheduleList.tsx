@@ -39,9 +39,9 @@ function Row({ item, today, on }: { item: ScheduleItem; today: string; on: RowHa
     <Card
       data-id={item.id}
       data-testid="schedule-row"
-      className={`sched-row border-l-4 p-3.5 ${item.paid ? 'opacity-60' : ''}`}
+      className={`sched-row border-l-4 p-4 shadow-[0_1px_2px_rgba(0,0,0,0.25)] ring-1 ring-inset ring-border/60 transition-all duration-150 hover:-translate-y-px hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)] hover:ring-border ${item.paid ? 'opacity-55' : ''}`}
       style={{
-        borderLeftColor: overdue ? 'var(--overdue)' : CATEGORY_VAR[item.category],
+        borderLeftColor: CATEGORY_VAR[item.category],
         ...(overdue
           ? { background: 'color-mix(in oklch, var(--overdue) 11%, var(--surface))' }
           : {}),

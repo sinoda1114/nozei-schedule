@@ -4,7 +4,7 @@
 // - GeminiAnalyzer: Gemini で画像/動画を解析して候補を抽出（キーは env から、コードに埋めない）。
 // createAnalyzer(env) が ANALYZER_API_KEY の有無で両者を切り替える。差し替え点はこのファイルに閉じる。
 
-import { type AnalyzeResult, sanitizeProposedList } from '../../src/analyze/types';
+import { INLINE_MAX_BYTES, type AnalyzeResult, sanitizeProposedList } from '../../src/analyze/types';
 
 export interface MediaInput {
   bytes: ArrayBuffer;
@@ -106,7 +106,14 @@ export function extractGeminiText(response: unknown): string {
     .trim();
 }
 
-/** Gemini で画像/動画を解析して候補を返す。キー/モデルは env 由来でコードに埋めない。 */
+const GENAI_BASE = 'https://generativelanguage.googleapis.com';
+
+type MediaPart =
+  | { inlineData: { mimeType: string; data: string } }
+  | { fileData: { mimeType: string; fileUri: string } };
+
+/** Gemini で画像/動画を解析して候補を返す。キー/モデルは env 由来でコードに埋めない。
+ * 小さい画像は inlineData、大きい/動画は File API(アップロード→処理待ち→fileData参照)。 */
 export class GeminiAnalyzer implements Analyzer {
   constructor(
     private readonly apiKey: string,
@@ -114,32 +121,22 @@ export class GeminiAnalyzer implements Analyzer {
   ) {}
 
   async analyze(input: MediaInput): Promise<AnalyzeResult> {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent`;
+    const part = await this.buildMediaPart(input);
+    const url = `${GENAI_BASE}/v1beta/models/${this.model}:generateContent`;
     const body = {
-      contents: [
-        {
-          parts: [
-            { text: EXTRACTION_PROMPT },
-            { inlineData: { mimeType: input.contentType, data: toBase64(input.bytes) } },
-          ],
-        },
-      ],
+      contents: [{ parts: [{ text: EXTRACTION_PROMPT }, part] }],
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: RESPONSE_SCHEMA,
       },
     };
-
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-goog-api-key': this.apiKey },
       body: JSON.stringify(body),
     });
-    if (!res.ok) {
-      throw new Error(`gemini error ${res.status}`);
-    }
-    const json = await res.json();
-    const text = extractGeminiText(json);
+    if (!res.ok) throw new Error(`gemini error ${res.status}`);
+    const text = extractGeminiText(await res.json());
     let parsed: unknown;
     try {
       parsed = JSON.parse(text);
@@ -147,6 +144,66 @@ export class GeminiAnalyzer implements Analyzer {
       return { items: [] };
     }
     return { items: sanitizeProposedList(parsed) };
+  }
+
+  /** inline か File API かを選んで media part を作る。 */
+  private async buildMediaPart(input: MediaInput): Promise<MediaPart> {
+    const useFileApi =
+      input.contentType.startsWith('video/') || input.bytes.byteLength > INLINE_MAX_BYTES;
+    if (!useFileApi) {
+      return { inlineData: { mimeType: input.contentType, data: toBase64(input.bytes) } };
+    }
+    const fileUri = await this.uploadViaFileApi(input);
+    return { fileData: { mimeType: input.contentType, fileUri } };
+  }
+
+  /** Gemini File API へ resumable アップロードし、ACTIVE になった file の uri を返す。 */
+  private async uploadViaFileApi(input: MediaInput): Promise<string> {
+    const numBytes = input.bytes.byteLength;
+    // 1) 開始（メタデータ）→ アップロードURLを得る
+    const start = await fetch(`${GENAI_BASE}/upload/v1beta/files`, {
+      method: 'POST',
+      headers: {
+        'x-goog-api-key': this.apiKey,
+        'X-Goog-Upload-Protocol': 'resumable',
+        'X-Goog-Upload-Command': 'start',
+        'X-Goog-Upload-Header-Content-Length': String(numBytes),
+        'X-Goog-Upload-Header-Content-Type': input.contentType,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ file: { display_name: input.fileName || 'upload' } }),
+    });
+    if (!start.ok) throw new Error(`gemini upload start ${start.status}`);
+    const uploadUrl = start.headers.get('x-goog-upload-url');
+    if (!uploadUrl) throw new Error('gemini upload url missing');
+
+    // 2) バイト本体をアップロード＆finalize
+    const up = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {
+        'content-length': String(numBytes),
+        'X-Goog-Upload-Offset': '0',
+        'X-Goog-Upload-Command': 'upload, finalize',
+      },
+      body: input.bytes,
+    });
+    if (!up.ok) throw new Error(`gemini upload ${up.status}`);
+    const upJson = (await up.json()) as { file?: { uri?: string; name?: string; state?: string } };
+    const file = upJson.file;
+    if (!file?.uri || !file?.name) throw new Error('gemini file uri missing');
+
+    // 3) 動画は処理待ち（PROCESSING → ACTIVE）。最大 ~45秒。
+    let state = file.state;
+    for (let i = 0; state === 'PROCESSING' && i < 30; i++) {
+      await new Promise((r) => setTimeout(r, 1500));
+      const st = await fetch(`${GENAI_BASE}/v1beta/${file.name}`, {
+        headers: { 'x-goog-api-key': this.apiKey },
+      });
+      if (!st.ok) throw new Error(`gemini file state ${st.status}`);
+      state = ((await st.json()) as { state?: string }).state;
+    }
+    if (state && state !== 'ACTIVE') throw new Error(`gemini file not active: ${state}`);
+    return file.uri;
   }
 }
 

@@ -22,9 +22,19 @@ function StatCard({
   accent?: boolean;
 }): ReactNode {
   return (
-    <Card className={`p-3.5 ${accent ? 'bg-accent-soft' : ''}`}>
-      <p className="text-xs text-muted">{label}</p>
-      <p className={`mt-1 text-xl font-extrabold tabular-nums tracking-tight ${valueClass ?? ''}`}>
+    <Card
+      className={`relative overflow-hidden p-4 shadow-none sm:p-5 ${
+        accent
+          ? 'bg-accent-soft ring-1 ring-inset ring-[var(--accent)]/25 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-[var(--accent)]/60 before:to-transparent'
+          : 'bg-surface ring-1 ring-inset ring-border'
+      }`}
+    >
+      <p className="m-0 text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-muted">
+        {label}
+      </p>
+      <p
+        className={`num m-0 mt-2 text-[1.7rem] font-black leading-none tracking-tight ${valueClass ?? ''}`}
+      >
         {value}
       </p>
       {note}
@@ -35,7 +45,7 @@ function StatCard({
 export function Summary({ items }: { items: readonly ScheduleItem[] }): ReactNode {
   const t = computeTotals(items);
   return (
-    <section className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="集計">
+    <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4" aria-label="集計">
       <StatCard
         label="年間合計"
         value={yen(t.total)}

@@ -7,9 +7,12 @@ import { type ScheduleItem, type TaxCategory } from '../types';
 export const SUPPORTED_MEDIA_TYPES = ['image/jpeg', 'image/png', 'video/mp4'] as const;
 export type SupportedMediaType = (typeof SUPPORTED_MEDIA_TYPES)[number];
 
-/** 最大サイズ（20MB）。Gemini の inline data はリクエスト総量 約20MB が上限のため整合させる。
- * これを超える動画は将来 File API / R2 直アップロード経由にする想定（側では未対応）。 */
-export const MAX_MEDIA_BYTES = 20 * 1024 * 1024;
+/** 最大サイズ（50MB）。inline(約20MB上限)を超える動画は Gemini File API 経由で扱う。
+ * これ以上の大容量は将来クライアント直アップロード(R2/File API)へ（側では未対応）。 */
+export const MAX_MEDIA_BYTES = 50 * 1024 * 1024;
+
+/** inline で送る上限（これを超える or 動画は File API 経由）。Gemini inline 総量 約20MB に余裕を見て 15MB。 */
+export const INLINE_MAX_BYTES = 15 * 1024 * 1024;
 
 /** 先頭バイトのマジックナンバーから実体の MIME を判定（申告 MIME を信用しないため）。 */
 export function detectMediaType(bytes: Uint8Array): SupportedMediaType | null {
