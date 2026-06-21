@@ -7,7 +7,7 @@
 //       APIキー(ANALYZER_API_KEY)は後で Pages secret として設定し createAnalyzer で分岐する。
 
 import { createAnalyzer } from '../_lib/analyzer';
-import { type AuthEnv, isAuthorized, json } from '../_lib/auth';
+import { type AuthEnv, cfAccessEmail, isAuthorized, json } from '../_lib/auth';
 import { MAX_MEDIA_BYTES, detectMediaType, validateMedia } from '../../src/analyze/types';
 
 interface AnalyzeEnv extends AuthEnv {
@@ -23,7 +23,8 @@ interface PagesContext {
 }
 
 export const onRequestPost = async ({ request, env }: PagesContext): Promise<Response> => {
-  if (!(await isAuthorized(request, env))) return json({ error: 'unauthorized' }, 401);
+  const authenticated = cfAccessEmail(request, env) !== null || (await isAuthorized(request, env));
+  if (!authenticated) return json({ error: 'unauthorized' }, 401);
 
   // multipart 全体をパースする前に Content-Length で粗く弾く（巨大ボディのパース回避）。
   const contentLength = Number(request.headers.get('content-length') ?? '0');
