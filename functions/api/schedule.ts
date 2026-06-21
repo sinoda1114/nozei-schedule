@@ -4,7 +4,7 @@
 //
 // 認証（2モード）:
 //   CF Access モード: CF-Access-Authenticated-User-Email ヘッダーを使用（本番）
-//   レガシーモード:   旧パスフレーズ/セッショントークン（CF Access 設定前の移行期間）
+//   レガシーモード:   旧パスフレーズ/セッショントークン（レガシークライアント向け）
 //   ローカル開発:     DEV_USER_EMAIL 環境変数で代替
 //
 // KV キー:
@@ -100,13 +100,7 @@ export const onRequestGet = async ({ request, env }: PagesContext): Promise<Resp
   const kvKey = await resolveKvKey(request, env);
   if (!kvKey) return json({ error: 'unauthorized' }, 401);
 
-  let stored = await env.SCHEDULE_KV.get(kvKey);
-
-  // CF Access モード初回アクセス時: レガシーキーにデータがあれば透過的に引き継ぐ
-  if (!stored && kvKey !== KV_KEY_LEGACY) {
-    stored = await env.SCHEDULE_KV.get(KV_KEY_LEGACY);
-  }
-
+  const stored = await env.SCHEDULE_KV.get(kvKey);
   return new Response(stored ?? emptyDoc(), { status: 200, headers: JSON_HEADERS });
 };
 
