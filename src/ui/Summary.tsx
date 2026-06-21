@@ -33,6 +33,7 @@ function StatCard({
         {label}
       </p>
       <p
+        data-testid="summary-value"
         className={`num m-0 mt-2 text-[clamp(1.1rem,3.5vw,1.7rem)] font-black leading-none tracking-tight ${valueClass ?? ''}`}
       >
         {value}
