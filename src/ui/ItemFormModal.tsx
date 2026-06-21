@@ -74,9 +74,7 @@ function DateCalendarPopover() {
           <Calendar.GridBody>
             {(date) => (
               <Calendar.Cell date={date}>
-                {/* CellIndicator だけだと数字が出ない。day を明示する */}
                 {date.day}
-                <Calendar.CellIndicator />
               </Calendar.Cell>
             )}
           </Calendar.GridBody>
