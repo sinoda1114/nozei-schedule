@@ -139,8 +139,8 @@ export function useSchedule(): ScheduleApi {
 
   const logout = useCallback(() => {
     clearToken();
-    setGateMessage('ログアウトしました。再度ログインしてください。');
-    setPhase('gate');
+    // CF Access のログアウトエンドポイントにリダイレクト（Cloudflare が Google セッションを無効化）
+    window.location.href = '/cdn-cgi/access/logout';
   }, []);
 
   // 初回ブート

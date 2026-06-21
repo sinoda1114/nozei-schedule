@@ -1,7 +1,9 @@
 // 保存層の抽象。UI はこのインターフェースにのみ依存するので、
 // 将来 KV から別バックエンド(Turso 等)へ差し替えても UI は無変更で済む。
 
-import { DOC_VERSION, type ScheduleDoc } from '../types';
+import { CATEGORY_LABELS, DOC_VERSION, type ScheduleDoc, type TaxCategory } from '../types';
+
+const VALID_CATEGORIES = new Set<string>(Object.keys(CATEGORY_LABELS));
 import { EXPECTED_UPDATED_AT_HEADER } from './concurrency';
 
 export interface ScheduleRepository {
@@ -128,10 +130,9 @@ function normalizeItem(input: unknown): ScheduleDoc['items'][number] {
     id: typeof o.id === 'string' && o.id ? o.id : crypto.randomUUID(),
     dueDate: typeof o.dueDate === 'string' ? o.dueDate : '',
     dueApprox: o.dueApprox === true,
-    category:
-      category === 'residence' || category === 'income' || category === 'business'
-        ? category
-        : 'other',
+    category: (typeof category === 'string' && VALID_CATEGORIES.has(category)
+      ? category
+      : 'other') as TaxCategory,
     label: typeof o.label === 'string' ? o.label : '',
     amount: typeof o.amount === 'number' && Number.isFinite(o.amount) ? o.amount : null,
     amountApprox: o.amountApprox === true,
