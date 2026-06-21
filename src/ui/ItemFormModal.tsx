@@ -5,7 +5,6 @@ import {
   Button,
   Calendar,
   Checkbox,
-  DateField,
   DatePicker,
   Input,
   Label,
@@ -16,6 +15,7 @@ import {
   TextField,
 } from '@heroui/react';
 import { parseDate } from '@internationalized/date';
+import { DateInput, DateSegment, Group } from 'react-aria-components';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { today as todayStr } from '../lib/today';
 import { CATEGORY_LABELS, type ScheduleItem, type TaxCategory } from '../types';
@@ -57,6 +57,7 @@ function safeParseDate(str: string) {
   try { return parseDate(str); } catch { return null; }
 }
 
+// カレンダーポップアップ（両日付フィールドで共用）
 function DateCalendarPopover() {
   return (
     <DatePicker.Popover>
@@ -73,6 +74,8 @@ function DateCalendarPopover() {
           <Calendar.GridBody>
             {(date) => (
               <Calendar.Cell date={date}>
+                {/* CellIndicator だけだと数字が出ない。day を明示する */}
+                {date.day}
                 <Calendar.CellIndicator />
               </Calendar.Cell>
             )}
@@ -80,6 +83,28 @@ function DateCalendarPopover() {
         </Calendar.Grid>
       </Calendar>
     </DatePicker.Popover>
+  );
+}
+
+// DateInput セグメント + カレンダートリガーを1つの入力欄に見せる
+// DateField を DatePicker.Trigger(button) の中に入れると壊れるため、
+// react-aria-components の Group + DateInput で正しく組み立てる
+function DateTriggerGroup() {
+  return (
+    <Group className="date-input-group date-input-group--full-width">
+      <div className="date-input-group__input-container">
+        <DateInput className="date-input-group__input">
+          {(segment) => (
+            <DateSegment segment={segment} className="date-input-group__segment" />
+          )}
+        </DateInput>
+      </div>
+      <div className="date-input-group__suffix">
+        <DatePicker.Trigger>
+          <DatePicker.TriggerIndicator />
+        </DatePicker.Trigger>
+      </div>
+    </Group>
   );
 }
 
@@ -183,10 +208,7 @@ export function ItemFormModal({
                   isRequired
                 >
                   <Label>納付期限 *</Label>
-                  <DatePicker.Trigger>
-                    <DateField />
-                    <DatePicker.TriggerIndicator />
-                  </DatePicker.Trigger>
+                  <DateTriggerGroup />
                   <DateCalendarPopover />
                 </DatePicker>
                 <Checkbox isSelected={form.dueApprox} onChange={(v) => set('dueApprox', v)}>
@@ -238,10 +260,7 @@ export function ItemFormModal({
                   onChange={(v) => set('paidDate', v?.toString() ?? '')}
                 >
                   <Label>支払日</Label>
-                  <DatePicker.Trigger>
-                    <DateField />
-                    <DatePicker.TriggerIndicator />
-                  </DatePicker.Trigger>
+                  <DateTriggerGroup />
                   <DateCalendarPopover />
                 </DatePicker>
               )}
