@@ -122,16 +122,12 @@ export function App(): ReactNode {
 
   // ---- 画像/動画から取り込み ----
   const runAnalyze = async (file: File): Promise<void> => {
-    const token = getToken();
-    if (!token) {
-      setNotice('再ログインしてください。');
-      return;
-    }
     if (analyzing) return;
     setAnalyzing(true);
     setNotice('解析中…');
     try {
-      const items = await analyzeFile(token, file);
+      // CF Access ユーザーはパスフレーズトークン不要（Cloudflare エッジで認証済み）
+      const items = await analyzeFile(getToken() ?? '', file);
       setNotice('');
       setAnalyze({ open: true, items });
     } catch (err) {
