@@ -17,6 +17,7 @@ export default defineConfig({
     // WebAuthn は rpID に IP を許可しない。localhost で動かすこと（rpID=localhost）。
     baseURL: `http://localhost:${PORT}`,
     headless: true,
+    locale: 'ja-JP',
     trace: 'retain-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
