@@ -31,13 +31,13 @@ interface FormState {
   dueApprox: boolean;
   amount: string;
   amountApprox: boolean;
-  status: 'confirmed' | 'estimated';
-  paid: boolean;
+  status: 'confirmed' | 'estimated' | 'paid';
   paidDate: string;
   note: string;
 }
 
 function initialState(existing?: ScheduleItem): FormState {
+  const isPaid = existing?.paid ?? false;
   return {
     category: existing?.category ?? 'other',
     label: existing?.label ?? '',
@@ -45,8 +45,7 @@ function initialState(existing?: ScheduleItem): FormState {
     dueApprox: existing?.dueApprox ?? false,
     amount: existing?.amount != null ? String(existing.amount) : '',
     amountApprox: existing?.amountApprox ?? false,
-    status: existing?.status === 'estimated' ? 'estimated' : 'confirmed',
-    paid: existing?.paid ?? false,
+    status: isPaid ? 'paid' : (existing?.status === 'estimated' ? 'estimated' : 'confirmed'),
     paidDate: existing?.paidDate ?? todayStr(),
     note: existing?.note ?? '',
   };
@@ -147,6 +146,8 @@ export function ItemFormModal({
       amount = Math.round(n);
     }
 
+    const isPaid = form.status === 'paid';
+    const entryStatus = form.status !== 'paid' ? form.status : 'confirmed';
     const item: ScheduleItem = {
       id: existing?.id ?? crypto.randomUUID(),
       dueDate,
@@ -155,9 +156,9 @@ export function ItemFormModal({
       label,
       amount,
       amountApprox: form.amountApprox,
-      status: form.status,
-      paid: form.paid,
-      paidDate: form.paid ? form.paidDate || todayStr() : null,
+      status: entryStatus,
+      paid: isPaid,
+      paidDate: isPaid ? (form.paidDate || todayStr()) : null,
       note: form.note.trim(),
     };
     onSubmit(item);
@@ -224,35 +225,34 @@ export function ItemFormModal({
                 </Checkbox>
               </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-end gap-3.5">
-                <Select
-                  selectedKey={form.status}
-                  onSelectionChange={(k) => set('status', k as FormState['status'])}
-                >
-                  <Label>区分</Label>
-                  <Select.Trigger>
-                    <Select.Value />
-                    <Select.Indicator />
-                  </Select.Trigger>
-                  <Select.Popover>
-                    <ListBox>
-                      <ListBox.Item id="confirmed" textValue="確定">
-                        確定
-                        <ListBox.ItemIndicator />
-                      </ListBox.Item>
-                      <ListBox.Item id="estimated" textValue="予測">
-                        予測
-                        <ListBox.ItemIndicator />
-                      </ListBox.Item>
-                    </ListBox>
-                  </Select.Popover>
-                </Select>
-                <Checkbox isSelected={form.paid} onChange={(v) => set('paid', v)}>
-                  支払済み
-                </Checkbox>
-              </div>
+              <Select
+                selectedKey={form.status}
+                onSelectionChange={(k) => set('status', k as FormState['status'])}
+              >
+                <Label>区分</Label>
+                <Select.Trigger>
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover>
+                  <ListBox>
+                    <ListBox.Item id="confirmed" textValue="確定">
+                      確定
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                    <ListBox.Item id="estimated" textValue="予測">
+                      予測
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                    <ListBox.Item id="paid" textValue="支払済み">
+                      支払済み
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                  </ListBox>
+                </Select.Popover>
+              </Select>
 
-              {form.paid && (
+              {form.status === 'paid' && (
                 <DatePicker
                   value={safeParseDate(form.paidDate)}
                   onChange={(v) => set('paidDate', v?.toString() ?? '')}

@@ -23,6 +23,13 @@ interface RowHandlers {
 }
 
 function StatusChip({ item }: { item: ScheduleItem }): ReactNode {
+  if (item.paid) {
+    return (
+      <Chip color="success" variant="soft" size="sm">
+        支払済み
+      </Chip>
+    );
+  }
   return item.status === 'confirmed' ? (
     <Chip color="accent" variant="soft" size="sm">
       確定
