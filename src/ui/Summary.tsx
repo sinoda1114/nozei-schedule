@@ -64,9 +64,10 @@ export function Summary({ items }: { items: readonly ScheduleItem[] }): ReactNod
         valueClass="text-[var(--estimated)]"
       />
       <StatCard
-        label="残り（未払い）"
-        value={yen(t.remaining)}
-        note={<span className="mt-1 block text-[0.72rem] text-muted">支払済 {yen(t.paid)}</span>}
+        label="支払済み"
+        value={yen(t.paid)}
+        valueClass="text-[var(--paid)]"
+        note={<span className="mt-1 block text-[0.72rem] text-muted">残り {yen(t.remaining)}</span>}
       />
     </section>
   );
