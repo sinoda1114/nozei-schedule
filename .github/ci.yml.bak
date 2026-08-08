@@ -1,0 +1,55 @@
+# CI パイプライン
+#
+# 目的: main への push / PR で「型・テスト・ビルド・脆弱性監査」を検証する。
+# 方針（サプライチェーン規律）:
+#   - 依存解決は必ず `npm ci`（lockfile 厳守）。
+#   - `.npmrc` の ignore-scripts=true により postinstall は走らない。
+#   - audit は high 閾値（moderate 以下は許容）。
+#
+# このプロジェクトには lint スクリプトが無いため lint ステップは持たない
+# （eslint を導入したら追加する）。E2E（playwright）はブラウザ要のため基本 CI から除外。
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: typecheck / test / build / audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 型チェック（build でも tsc は走るが、型だけ先に独立検証）。
+      - name: Type check
+        run: npx tsc --noEmit
+
+      # 単体テスト（vitest）。
+      - name: Test
+        run: npm run test
+
+      # ビルド（tsc --noEmit && vite build）。Pages の出力は dist。
+      - name: Build
+        run: npm run build
+
+      # 依存の脆弱性監査。high 以上で失敗。
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
