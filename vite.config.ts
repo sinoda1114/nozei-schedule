@@ -19,5 +19,17 @@ export default defineConfig({
     // vitest（ユニット/DOM）は src と functions のみ。tests/e2e の Playwright spec は除外。
     include: ['src/**/*.test.{ts,tsx}', 'functions/**/*.test.ts'],
     environment: 'node',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary'],
+      // ラチェット方式: 実測値（Stmts 77.5 / Branch 79.5 / Funcs 85 / Lines 81.5）の
+      // 少し下に設定し、カバレッジの退行だけを CI で止める。向上したら随時引き上げる
+      thresholds: {
+        statements: 72,
+        branches: 75,
+        functions: 80,
+        lines: 76,
+      },
+    },
   },
 });
