@@ -7,8 +7,12 @@
 - フロント: Vite + React 19 + TypeScript / UI は HeroUI v3（Tailwind CSS v4）
 - API: Cloudflare Pages Functions (`functions/api/schedule.ts`)
 - 保存: Cloudflare KV（スケジュール全体を1個のJSONドキュメントで保持）
-- 認証: パスキー(WebAuthn/FIDO2) を主、リカバリコード（旧称パスフレーズ）を保険に。
-  ログイン成功で HMAC 署名セッショントークンを発行し `Authorization: Bearer` で送る。
+- 認証: 本番は Cloudflare Access（Zero Trust）をホスト名全体に適用済み。
+  アプリ層はさらにパスキー(WebAuthn/FIDO2) を主、リカバリコード（旧称パスフレーズ）を保険に、
+  二重で認証する。ログイン成功で HMAC 署名セッショントークンを発行し `Authorization: Bearer` で送る。
+  `functions/_lib/auth.ts` の `cfAccessEmail()` は Cloudflare Access が付与する
+  `CF-Access-Authenticated-User-Email` ヘッダーを読むが、JWT (`Cf-Access-Jwt-Assertion`) の
+  署名検証は未実装（Cloudflare Access がホスト名を経由しない到達経路を許さない前提に依存している）。
 
 ## 機能
 
@@ -63,13 +67,16 @@ wrangler kv namespace create SCHEDULE_KV
 # 2) 認証パスフレーズを Secret として登録（本番用に十分長いランダム値を）
 wrangler pages secret put APP_PASSPHRASE
 
-# 3) ビルドしてデプロイ
+# 3) 初回のみ手動デプロイ（プロジェクト作成のため）
 npm run deploy
 ```
 
-> GitHub 連携でデプロイする場合は、Cloudflare Pages のダッシュボードで
-> リポジトリを接続し、Build command = `npm run build`、Output dir = `dist`、
-> KV バインディング `SCHEDULE_KV` と環境変数 `APP_PASSPHRASE` を設定する。
+> **通常のデプロイは自動**: main へのマージで `.github/workflows/deploy.yml` が
+> 「標準CI → Cloudflare Pages デプロイ → 疎通確認」を自動実行する
+> （[ci-standard の CD標準](https://github.com/sinoda1114/ci-standard/blob/main/docs/CD.md)）。
+> ローカルでの `npm run deploy` 手動実行は原則廃止。緊急再デプロイは
+> Actions タブ → Deploy → Run workflow（main のみ有効）。
+> ロールバックは `npx wrangler pages deployment rollback`。
 
 ## データとバックアップ
 
@@ -80,7 +87,7 @@ npm run deploy
 
 ## セキュリティ注意
 
-- パスフレーズはこのアプリ唯一のアクセス制御。十分長いランダム値にし、
-  漏れたら `wrangler pages secret put APP_PASSPHRASE` で更新する。
+- アクセス制御は Cloudflare Access（ホスト名全体）+ アプリ層のパスキー/パスフレーズの二重。
+  パスフレーズは十分長いランダム値にし、漏れたら `wrangler pages secret put APP_PASSPHRASE` で更新する。
 - ブラウザ側はパスフレーズを `localStorage` に保持する（共有PCでは「パスフレーズを変更」で消去）。
 - 機密度の高い個人情報（口座番号など）は登録しない想定。金額と予定の管理に留める。
