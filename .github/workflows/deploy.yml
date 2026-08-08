@@ -21,10 +21,14 @@ permissions:
 jobs:
   ci:
     uses: sinoda1114/ci-standard/.github/workflows/node-ci.yml@main
+    with:
+      node-version: "22" # wrangler v4.120+ が Node 22 必須のため
 
   deploy:
     needs: ci
     uses: sinoda1114/ci-standard/.github/workflows/deploy-cloudflare.yml@main
+    with:
+      node-version: "22" # wrangler v4.120+ が Node 22 必須のため
     secrets:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

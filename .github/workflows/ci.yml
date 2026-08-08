@@ -16,3 +16,5 @@ jobs:
   ci:
     # secrets: inherit は付けない（最小権限。標準CIはシークレット不使用、値は .github/ci.env 供給）
     uses: sinoda1114/ci-standard/.github/workflows/node-ci.yml@main
+    with:
+      node-version: "22" # wrangler v4.120+ が Node 22 必須のため
