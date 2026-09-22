@@ -16,7 +16,12 @@ export interface Analyzer {
   analyze(input: MediaInput): Promise<AnalyzeResult>;
 }
 
-/** キー無し時のフォールバック。固定のモック候補を返す（テスト/CIで決定的）。 */
+/**
+ * キー無し時のフォールバック。固定のモック候補を返す（テスト/CIで決定的）。
+ *
+ * tests/e2e/media-import.spec.ts が候補数 2 と「（画像解析サンプル）」の文言に依存する。
+ * 実 Gemini が呼ばれていないことの判別に使っているため、変えるときは同 spec も直すこと。
+ */
 export class StubAnalyzer implements Analyzer {
   async analyze(input: MediaInput): Promise<AnalyzeResult> {
     const kind = input.contentType.startsWith('video/') ? '動画' : '画像';

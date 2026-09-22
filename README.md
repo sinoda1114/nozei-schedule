@@ -46,11 +46,22 @@ Functions が動く。ブラウザでパスフレーズ（`.dev.vars` の値）�
 
 ### テスト
 
-純粋ロジック（集計・フォーマット）は vitest でテストしている。
+純粋ロジック（集計・フォーマット）は vitest、画面の通しは Playwright でテストしている。
 
 ```bash
-npm test
+npm test          # vitest（純粋ロジック）
+npm run test:e2e  # Playwright（build → wrangler pages dev を自動起動）
 ```
+
+E2E は `.dev.vars` を必要としない。認証情報は `playwright.config.ts` が
+`wrangler pages dev --binding` で渡し、上書きした 3 変数
+（`APP_PASSPHRASE` / `SESSION_SECRET` / `ANALYZER_API_KEY`）は `.dev.vars` の値より
+優先される（wrangler 4.136.2 で実測。公開仕様ではないので、wrangler 更新後に
+ローカルだけ落ちるようになったらまずここを疑う）。
+おかげで CI でもそのまま動き、開発者ごとのパスフレーズにも左右されない。
+
+E2E 用サーバは毎回新規に起動する。別途 `wrangler pages dev` を 8791 で上げていると
+ポート衝突で起動に失敗するので、先に止めること。
 
 ## Cloudflare へのデプロイ
 
