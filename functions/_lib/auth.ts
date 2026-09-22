@@ -35,7 +35,11 @@ export function b64urlEncode(bytes: Uint8Array): string {
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-export function b64urlDecode(s: string): Uint8Array {
+// 戻り値を Uint8Array<ArrayBuffer> と明示する。TS 5.7 以降、裸の Uint8Array は
+// Uint8Array<ArrayBufferLike> を意味し、SimpleWebAuthn の credential.publicKey
+// （Uint8Array<ArrayBuffer>）に渡せない。Uint8Array.from は実際に ArrayBuffer を
+// 返すので、宣言を実態に合わせるだけで実行時の挙動は変わらない。
+export function b64urlDecode(s: string): Uint8Array<ArrayBuffer> {
   const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
   const bin = atob(b64);
   return Uint8Array.from(bin, (c) => c.charCodeAt(0));
