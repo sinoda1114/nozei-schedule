@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
 
+import { E2E_PASSPHRASE } from './fixtures';
+
 // スマホ幅でのレイアウト崩れ回帰テスト。
 // 既知の崩れ: 明細行が固定多カラムのままで、ラベルが1文字ずつ折返し＋「削除」が画面外へはみ出す。
-const PASSPHRASE = 'test-pass-1234567890';
 
 // iPhone 相当の縦長ビューポート
 test.use({ viewport: { width: 390, height: 844 } });
@@ -11,7 +12,7 @@ test('スマホ幅で横スクロール(はみ出し)が発生せず、行の操
   page,
 }) => {
   await page.goto('/');
-  await page.getByTestId('recovery-input').fill(PASSPHRASE);
+  await page.getByTestId('recovery-input').fill(E2E_PASSPHRASE);
   await page.getByTestId('recovery-submit').click();
   await expect(page.getByTestId('topbar')).toBeVisible();
 

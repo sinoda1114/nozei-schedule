@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
 
+import { E2E_PASSPHRASE } from './fixtures';
+
 // 画像/動画からの取り込みフロー（側）E2E。
 // バックエンドは APIキー未設定時の StubAnalyzer を使うため、キー無しで決定的に通る（CI安全）。
-const PASSPHRASE = 'test-pass-1234567890';
 
 // 1x1 透明PNG（内容はスタブが無視。アップロード経路の検証用）。
 const PNG_1PX = Buffer.from(
@@ -12,7 +13,7 @@ const PNG_1PX = Buffer.from(
 
 test('画像/動画から取り込み: アップロード→確認モーダル→選択して追加', async ({ page }) => {
   await page.goto('/');
-  await page.getByTestId('recovery-input').fill(PASSPHRASE);
+  await page.getByTestId('recovery-input').fill(E2E_PASSPHRASE);
   await page.getByTestId('recovery-submit').click();
   await expect(page.getByTestId('topbar')).toBeVisible();
 
@@ -25,24 +26,27 @@ test('画像/動画から取り込み: アップロード→確認モーダル�
     buffer: PNG_1PX,
   });
 
-  // 確認モーダルに候補が出る（スタブは2件）
+  // 確認モーダルに StubAnalyzer の固定候補 2 件が出る。
+  // 件数と固定文言まで見るのは、playwright.config.ts の ANALYZER_API_KEY 空上書きが
+  // 将来壊れて実 Gemini が呼ばれた場合に、緑のまま課金経路へ入るのを防ぐため。
   const dialog = page.getByRole('dialog');
   await expect(dialog).toBeVisible();
+  const STUB_CANDIDATES = 2;
   const candidates = page.getByTestId('analyze-candidate');
-  expect(await candidates.count()).toBeGreaterThanOrEqual(1);
-  const added = await candidates.count();
+  await expect(candidates).toHaveCount(STUB_CANDIDATES);
+  await expect(dialog).toContainText('（画像解析サンプル）');
 
   // 全件取り込む
   await page.getByTestId('analyze-confirm').click();
 
   // 行が候補数ぶん増え、保存される
-  await expect(page.getByTestId('schedule-row')).toHaveCount(before + added);
+  await expect(page.getByTestId('schedule-row')).toHaveCount(before + STUB_CANDIDATES);
   await expect(page.getByTestId('save-status')).toContainText('保存しました', { timeout: 15_000 });
 });
 
 test('トップに取り込みドロップゾーンが表示される', async ({ page }) => {
   await page.goto('/');
-  await page.getByTestId('recovery-input').fill(PASSPHRASE);
+  await page.getByTestId('recovery-input').fill(E2E_PASSPHRASE);
   await page.getByTestId('recovery-submit').click();
   await expect(page.getByTestId('topbar')).toBeVisible();
 

@@ -1,13 +1,12 @@
 import { expect, test } from '@playwright/test';
 
-// .dev.vars の APP_PASSPHRASE と一致させること
-const PASSPHRASE = 'test-pass-1234567890';
+import { E2E_PASSPHRASE } from './fixtures';
 
 test('リカバリコードログイン → 追加モーダルで明細を1件追加できる', async ({ page }) => {
   await page.goto('/');
 
   // ログイン
-  await page.getByTestId('recovery-input').fill(PASSPHRASE);
+  await page.getByTestId('recovery-input').fill(E2E_PASSPHRASE);
   await page.getByTestId('recovery-submit').click();
   await expect(page.getByTestId('topbar')).toBeVisible();
 

@@ -3,11 +3,11 @@
 
 import { expect, test } from '@playwright/test';
 
-const PASSPHRASE = 'test-pass-1234567890';
+import { E2E_PASSPHRASE } from './fixtures';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
-  await page.getByTestId('recovery-input').fill(PASSPHRASE);
+  await page.getByTestId('recovery-input').fill(E2E_PASSPHRASE);
   await page.getByTestId('recovery-submit').click();
   await expect(page.getByTestId('topbar')).toBeVisible();
 });

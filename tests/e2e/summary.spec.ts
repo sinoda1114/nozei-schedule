@@ -1,14 +1,15 @@
 import { expect, test } from '@playwright/test';
 
+import { E2E_PASSPHRASE } from './fixtures';
+
 // Summaryカードの表示退行テスト。
 // 数値が折り返し・クリップなく1行で表示されることをビューポートを変えて検証する。
 // - 折り返し検出: leading-none 前提で offsetHeight > fontSize * 1.5 なら折り返しあり
 // - クリップ検出: Range API で実テキスト幅 > 要素幅
-const PASSPHRASE = 'test-pass-1234567890';
 
 async function loginAndLoadSeed(page: import('@playwright/test').Page): Promise<void> {
   await page.goto('/');
-  await page.getByTestId('recovery-input').fill(PASSPHRASE);
+  await page.getByTestId('recovery-input').fill(E2E_PASSPHRASE);
   await page.getByTestId('recovery-submit').click();
   await expect(page.getByTestId('topbar')).toBeVisible();
   // データがなければサンプルを読み込んで金額を表示させる
