@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
 
 test('1. 追加モーダルの納付期限にスピンボタンが表示される', async ({ page }) => {
   await page.getByTestId('add-btn').click();
-  const dialog = page.getByRole('dialog');
+  const dialog = page.getByRole('dialog', { name: '予定を追加' });
   await expect(dialog).toBeVisible();
 
   // DateField のセグメント（role=spinbutton）が最低1つ存在する
@@ -28,29 +28,27 @@ test('1. 追加モーダルの納付期限にスピンボタンが表示され�
 
 test('2. キーボード入力で日付をセットして追加できる', async ({ page }) => {
   await page.getByTestId('add-btn').click();
-  const dialog = page.getByRole('dialog');
+  const dialog = page.getByRole('dialog', { name: '予定を追加' });
   await expect(dialog).toBeVisible();
 
   // 表示名
   const label = `E2E-DatePicker-KB-${Date.now()}`;
   await dialog.locator('input[name="label"]').fill(label);
 
-  // 最初のスピンボタン（年または月）をクリックしてキーボード入力
-  const spinners = dialog.getByRole('spinbutton');
-  await spinners.first().click();
+  // 年セグメントをクリックしてキーボード入力
+  await dialog.getByRole('spinbutton').first().click();
 
-  // React Aria DateSegment: playwright.config.ts で locale='ja-JP' を設定済み → YYYY/MM/DD 順
-  await page.keyboard.type('2027');
-  await page.keyboard.press('Tab');
-  await page.keyboard.type('03');
-  await page.keyboard.press('Tab');
-  await page.keyboard.type('10');
+  // React Aria DateSegment: セグメントが埋まると次のセグメントへ自動で送られる。
+  // Tab を挟むと送り先を1つ飛ばして月が未入力のままになるため、続けて打つ。
+  // playwright.config.ts で locale='ja-JP' を設定済み → YYYY/MM/DD 順
+  await page.keyboard.type('20270310');
 
   // 追加
   await dialog.getByRole('button', { name: '追加' }).click();
 
-  // 一覧にラベルが表れる
-  await expect(page.getByText(label)).toBeVisible({ timeout: 10_000 });
+  // 一覧にラベルが表れ、打鍵した日付がそのまま入っている
+  const row = page.getByTestId('schedule-row').filter({ hasText: label });
+  await expect(row).toContainText('2027/3/10');
 });
 
 // ── 3. カレンダーポップアップが正しく開く ────────────────────────────────────
@@ -59,7 +57,7 @@ test('3. カレンダーアイコンをクリックするとカレンダーが d
   page,
 }) => {
   await page.getByTestId('add-btn').click();
-  const dialog = page.getByRole('dialog');
+  const dialog = page.getByRole('dialog', { name: '予定を追加' });
   await expect(dialog).toBeVisible();
 
   // カレンダートリガーボタンをクリック
@@ -90,7 +88,7 @@ test('3. カレンダーアイコンをクリックするとカレンダーが d
 
 test('4. カレンダーの日付セルに日付番号が表示される', async ({ page }) => {
   await page.getByTestId('add-btn').click();
-  const dialog = page.getByRole('dialog');
+  const dialog = page.getByRole('dialog', { name: '予定を追加' });
   await expect(dialog).toBeVisible();
 
   const trigger = dialog.locator('[data-slot="date-picker-trigger"]').first();
@@ -99,16 +97,18 @@ test('4. カレンダーの日付セルに日付番号が表示される', async
   const calendar = page.locator('[role="application"]');
   await expect(calendar).toBeVisible({ timeout: 5_000 });
 
-  // gridcell に "1" が含まれる（1日が表示されている）
-  const cell1 = calendar.getByRole('gridcell', { name: '1' }).first();
-  await expect(cell1).toBeVisible({ timeout: 5_000 });
+  // セルが空描画でなく日付番号を出していること。
+  // getByRole の name は部分一致かつアクセシブル名が日付全文のため、'1' では前月末セルに当たる。
+  // 表示テキストが当月内で一意になる 15 で確かめる（'1' は当月と翌月頭の2セルに当たる）。
+  const cell = calendar.getByRole('gridcell').filter({ hasText: /^15$/ });
+  await expect(cell).toHaveText('15', { timeout: 5_000 });
 });
 
 // ── 5. カレンダーから日付を選択して閉じる ────────────────────────────────────
 
 test('5. カレンダーで日付をクリックするとポップアップが閉じて日付が入る', async ({ page }) => {
   await page.getByTestId('add-btn').click();
-  const dialog = page.getByRole('dialog');
+  const dialog = page.getByRole('dialog', { name: '予定を追加' });
   await expect(dialog).toBeVisible();
 
   const trigger = dialog.locator('[data-slot="date-picker-trigger"]').first();
@@ -117,14 +117,15 @@ test('5. カレンダーで日付をクリックするとポップアップが�
   const calendar = page.locator('[role="application"]');
   await expect(calendar).toBeVisible({ timeout: 5_000 });
 
-  // 15 日をクリック（どの月でも 15 日は通常表示される）
-  await calendar.getByRole('gridcell', { name: /^15$/ }).first().click();
+  // 15 日をクリック（どの月でも 15 日は通常表示される）。
+  // gridcell のアクセシブル名は子ボタンの aria-label 由来で「2026年9月15日火曜日」形式。
+  // 日付番号では一致しないため、表示テキストで絞る。
+  await calendar.getByRole('gridcell').filter({ hasText: /^15$/ }).click();
 
   // カレンダーが閉じる
   await expect(calendar).not.toBeVisible({ timeout: 5_000 });
 
-  // 日付フィールドに値が入っている（スピンボタンが placeholder でない）
-  const yearSpinner = dialog.getByRole('spinbutton').first();
-  const ariaValueNow = await yearSpinner.getAttribute('aria-valuenow');
-  expect(ariaValueNow).not.toBeNull();
+  // クリックした 15 日が日セグメントに入っている
+  const daySegment = dialog.getByRole('spinbutton', { name: /^日,/ });
+  await expect(daySegment).toHaveAttribute('aria-valuenow', '15');
 });
