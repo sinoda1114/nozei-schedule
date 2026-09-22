@@ -103,6 +103,7 @@ test.describe('Summaryカード', () => {
     await expect(section.getByText('年間合計')).toBeVisible();
     await expect(section.getByText('確定分')).toBeVisible();
     await expect(section.getByText('予測分')).toBeVisible();
-    await expect(section.getByText('残り（未払い）')).toBeVisible();
+    await expect(section.getByText('支払済み')).toBeVisible();
+    await expect(section.getByText(/^残り ¥/)).toBeVisible();
   });
 });
