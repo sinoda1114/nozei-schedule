@@ -1,0 +1,26 @@
+{
+  // アプリのビルド対象外のコード（テストと設定ファイル）の型検査。
+  // tsconfig.json の include は ["src"]、かつ exclude で src のテストも外しているため、
+  // この設定が無いとテストと設定ファイルはどこからも型検査されない。
+  // Playwright も vitest も esbuild で型を剥がすだけで検査しない（実測で確認済み）。
+  // npm run typecheck から呼ばれ、標準CIが package.json の script を見て自動で拾う。
+  //
+  // functions/ は Cloudflare Workers の型（DOM ではない）が要るため別設定。
+  // functions/tsconfig.json があり、npm run typecheck がそれも回す。
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // playwright.config.ts が node:crypto と process.env を使う。
+    // vite/client は extends で継承されず置換されるため明示する（import.meta.env 用）。
+    // DOM は tsconfig.json の lib から来る（page.evaluate と happy-dom のテストで必要）。
+    "types": ["node", "vite/client"]
+  },
+  // tsconfig.json の exclude は src のテストを外している。継承すると検査対象から漏れるので打ち消す。
+  // node_modules は残す（exclude を空にすると TS の既定除外ごと無効になるため）。
+  "exclude": ["node_modules"],
+  "include": [
+    "tests",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "*.config.ts"
+  ]
+}
