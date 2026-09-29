@@ -4,8 +4,8 @@ Nozei Schedule（Cloudflare Pages + Vite + TS）の AI 向けプロジェクト�
 
 ## 運用ルール（HOW）の正本
 
-このプロジェクトの開発フロー（worktree / PR / 2 段ゲート / デプロイ規律 / GitHub 正本 / Issue・Project タスク管理 / 供給網デフォルト）は、**本リポの `notes/`** を正本とする。
-同じ挙動規律は `~/.claude` グローバルにも既定として入っているため、自分の端末の全 PJ に自動適用される。
+このプロジェクトの開発フロー（worktree / PR / push 前の 1 段ゲート `/ai-review` / デプロイ規律 / GitHub 正本 / Issue・Project タスク管理 / 供給網デフォルト）の要点は **本リポの `notes/`** にある（リポと一緒に travel する。Codex / Cursor もここを読む）。
+詳細な挙動規律は `~/.claude/CLAUDE.md` グローバルが正本で、自分の端末の全 PJ に自動適用される。notes/ はその要約であり、食い違ったらグローバルを正とする。
 **ここには挙動の再説明を書かない**（重複・ドリフト防止）。このファイルは**このプロジェクト固有の値だけ**を持つ。
 
 - 開発フロー詳細: `notes/dev-workflow-multiagent.md`
@@ -19,7 +19,7 @@ Nozei Schedule（Cloudflare Pages + Vite + TS）の AI 向けプロジェクト�
 | リポ実体 dir（統合＋デプロイ専用・ここで機能開発しない） | `~/dev/nozei-schedule` |
 | GitHub | `sinoda1114/nozei-schedule` |
 | スタック | Cloudflare Pages + Vite + TypeScript + vitest（E2E: Playwright）/ KV |
-| デプロイ基盤 | Cloudflare Pages（**Direct Upload・手動 `npm run deploy`**）。git 連携の自動デプロイは無効。下記参照 |
+| デプロイ基盤 | Cloudflare Pages（GitHub Actions `deploy.yml`、main マージ = Production）。手動 `npm run deploy` はしない |
 | 本番 URL | https://nozei-schedule.pages.dev （独自ドメインがあれば差し替え） |
 | タスク正本 | GitHub Issue / Project「Nozei Schedule Tasks」 |
 
