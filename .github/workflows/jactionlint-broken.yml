@@ -1,0 +1,9 @@
+# 検証用（マージしない）: 読めない式で ci / build が落ちることを確かめる
+on: workflow_dispatch
+permissions: {}
+jobs:
+  t:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - run: python3 -c 'print(f"${{x}}")'
